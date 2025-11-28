@@ -1,52 +1,71 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, Video, Clock } from 'lucide-react';
+import { Calendar, Clock, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import useSWR from 'swr';
+import moment from 'moment';
 
-// Données factices
-const nextAppointment = {
-    type: "Coaching en Ligne",
-    date: "Lundi 10 Nov.",
-    time: "14h00",
-    link: "Lien disponible le jour J"
-};
-const lastPurchase = {
-    title: "L'Art de l'Automassage",
-    image: "/images/video-thumb-automassage.jpg"
-};
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center p-12">
+        <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-[#af4d30]"></div>
+    </div>
+);
+
+const fetcher = url => fetch(url).then(res => {
+    if (!res.ok) throw new Error('Erreur de chargement des données du tableau de bord.');
+    return res.json();
+});
 
 export default function DashboardPage() {
+
+     const { data, error, isLoading } = useSWR('/api/dashboard', fetcher);
+
+    if (isLoading) return <LoadingSpinner />;
+    if (error) return (
+        <div className="text-red-500 p-8 text-center">
+            <AlertTriangle className="mx-auto h-8 w-8 mb-2"/>{error.message}
+        </div>
+    );
+
+    const { userName, nextAppointment, coursesCount, recentActivity, recentInvoices } = data;
+
     return (
         <div>
-            <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-[#1f2937] mb-8">
-                Bonjour, Marie!
+             <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-[#1f2937] mb-8">
+                Bonjour, {userName}!
             </motion.h1>
 
             <div className="relative z-[2]  grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* --- Carte Prochain Rendez-vous --- */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm">
                     <h2 className="font-bold text-xl mb-4">Votre prochain rendez-vous</h2>
-                    <div className="bg-gray-50 p-4 rounded-lg flex items-center gap-6">
-                        <div className="bg-[#af4d30] text-white p-4 rounded-lg">
-                            <Calendar size={28}/>
+                    {nextAppointment ? (
+                        <div className="bg-gray-50 p-4 rounded-lg flex items-center gap-6">
+                            <div className="bg-[#af4d30] text-white p-4 rounded-lg"><Calendar size={28}/></div>
+                            <div>
+                                <p className="font-bold text-lg">{nextAppointment.title}</p>
+                                <p className="text-gray-600 flex items-center gap-2">
+                                    <Clock size={16}/> {moment(nextAppointment.start_time).format('dddd D MMMM [à] HH:mm')}
+                                </p>
+                                {nextAppointment.meet_link && <p className="text-sm text-blue-500 mt-1">Lien de la session disponible</p>}
+                            </div>
                         </div>
-                        <div>
-                            <p className="font-bold text-lg">{nextAppointment.type}</p>
-                            <p className="text-gray-600 flex items-center gap-2"><Clock size={16}/> {nextAppointment.date} à {nextAppointment.time}</p>
-                            <p className="text-sm text-blue-500 mt-1">{nextAppointment.link}</p>
+                    ) : (
+                        <div className="text-center py-8 bg-gray-50 rounded-lg">
+                            <p className="text-gray-500">Vous n'avez aucun rendez-vous à venir.</p>
                         </div>
-                    </div>
-                     <Link href="/compte/rendez-vous" className="mt-4 inline-block font-semibold text-[#af4d30] hover:underline">
+                    )}
+                    <Link href="/compte/rendez-vous" className="mt-4 inline-block font-semibold text-[#af4d30] hover:underline">
                         Gérer tous mes rendez-vous →
                     </Link>
                 </motion.div>
 
                 {/* --- Carte Statistique Formations --- */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-2xl shadow-sm">
+                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-2xl shadow-sm">
                     <h2 className="font-bold text-xl mb-4">Vos Formations</h2>
                      <div className="text-center">
-                        <p className="text-6xl font-extrabold text-[#af4d30]">5</p>
+                        <p className="text-6xl font-extrabold text-[#af4d30]">{coursesCount}</p>
                         <p className="text-gray-600">Formations acquises</p>
                     </div>
                     <Link href="/compte/formations" className="mt-4 block text-center font-semibold text-[#af4d30] hover:underline">
@@ -55,36 +74,41 @@ export default function DashboardPage() {
                 </motion.div>
             </div>
 
-             <div className="mt-12 bg-white p-6 rounded-2xl shadow-sm">
+              <div className="mt-12 bg-white p-6 rounded-2xl shadow-sm">
                 <h2 className="font-bold text-xl mb-4">Ma dernière activité</h2>
-                <ul className="divide-y divide-gray-100">
-                    <li className="py-3 flex justify-between items-center">
-                        <div>
-                            <p className="font-semibold">Achat de formation</p>
-                            <p className="text-sm text-gray-500">"L'Art de l'Automassage"</p>
-                        </div>
-                        <span className="text-sm text-gray-500">Il y a 2 jours</span>
-                    </li>
-                    <li className="py-3 flex justify-between items-center">
-                        <div>
-                            <p className="font-semibold">RDV confirmé</p>
-                            <p className="text-sm text-gray-500">"MANAXDRAIN"</p>
-                        </div>
-                        <span className="text-sm text-gray-500">Il y a 5 jours</span>
-                    </li>
-                </ul>
+                {recentActivity && recentActivity.length > 0 ? (
+                    <ul className="divide-y divide-gray-100">
+                        {recentActivity.map((activity, index) => (
+                            <li key={index} className="py-3 flex justify-between items-center">
+                                <p className="text-gray-800">{activity.message}</p>
+                                <span className="text-sm text-gray-500">{moment(activity.created_at).fromNow()}</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-gray-500">Aucune activité récente.</p>
+                )}
                  <Link href="/compte/notifications" className="mt-4 inline-block font-semibold text-sm text-[#af4d30] hover:underline">
                     Voir toutes les notifications →
                 </Link>
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white mt-8 p-6 rounded-2xl shadow-sm">
-    <h2 className="font-bold text-xl mb-4">Mes Factures</h2>
-    <div className="space-y-2 text-sm">
-        <a href="#" className="flex justify-between items-center text-gray-600 hover:text-[#af4d30]"><span>Facture #1024 - Achat</span> <span>Télécharger</span></a>
-        <a href="#" className="flex justify-between items-center text-gray-600 hover:text-[#af4d30]"><span>Facture #1023 - Acompte</span> <span>Télécharger</span></a>
-    </div>
-</motion.div>
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white mt-8 p-6 rounded-2xl shadow-sm">
+                <h2 className="font-bold text-xl mb-4">Mes Factures Récentes</h2>
+                {recentInvoices && recentInvoices.length > 0 ? (
+                    <div className="space-y-2 text-sm">
+                        {recentInvoices.map((invoice, index) => (
+                            <a href="#" key={index} className="flex justify-between items-center text-gray-600 hover:text-[#af4d30]">
+                                <span>Facture du {moment(invoice.created_at).format('D MMM YYYY')} - {Number(invoice.amount).toFixed(2)}€</span>
+                                <span>Télécharger</span>
+                            </a>
+                        ))}
+                    </div>
+                ) : (
+                     <p className="text-sm text-gray-500">Aucune facture disponible.</p>
+                )}
+            </motion.div>
+
 
             {/* --- Suggestions et Accès Rapides --- */}
             <div className="mt-8">

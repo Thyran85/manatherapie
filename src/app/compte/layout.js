@@ -6,19 +6,39 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Calendar, Video, User, Bell, LogOut, X, Menu,ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion'; // Importer AnimatePresence
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { useCart } from '@/context/CartContext';
 
-const navItems = [
+
+
+// On extrait le menu dans son propre composant pour le réutiliser
+const SideNav = () => {
+    const pathname = usePathname();
+    const router = useRouter();
+    const { cartItems } = useCart(); // Récupérer les items du panier
+    const cartItemCount = cartItems.length;
+
+    const navItems = [
     { name: "Tableau de Bord", href: "/compte", icon: <LayoutDashboard/> },
     { name: "Mes Rendez-vous", href: "/compte/rendez-vous", icon: <Calendar/> },
     { name: "Mes Formations", href: "/compte/formations", icon: <Video/> },
     { name: "Mon Profil", href: "/compte/profil", icon: <User/> },
     { name: "Notifications", href: "/compte/notifications", icon: <Bell/>, badge: 3 },
-    { name: "Mon Panier", href: "/compte/panier", icon: <ShoppingCart/>, badge: 2 },
+    { 
+            name: "Mon Panier", 
+            href: "/compte/panier", 
+            icon: <ShoppingCart/>, 
+            badge: cartItemCount > 0 ? cartItemCount : null 
+        },
 ];
+    
 
-// On extrait le menu dans son propre composant pour le réutiliser
-const SideNav = () => {
-    const pathname = usePathname();
+const handleLogout = () => {
+    signOut({ callbackUrl: '/auth/login' }); // On dit à Next-Auth de déconnecter et de rediriger
+};
+
+
     return (
         <div className="  bg-white border-r border-gray-200 h-full p-6 flex flex-col justify-between">
             <div className="">
@@ -27,25 +47,32 @@ const SideNav = () => {
                         <Image src="/images/logo.jpeg" alt="manatherapy logo" fill className="object-cover"/>
                     </Link>
                 </div>
-                <nav className="space-y-2">
+                 <nav className="space-y-2">
                     {navItems.map(item => (
                         <Link key={item.name} href={item.href} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === item.href ? 'bg-[#af4d30] text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-[#1f2937]'}`}>
                             {item.icon}
                             <span className="font-semibold">{item.name}</span>
-                            {item.badge && <span className="ml-auto bg-rose-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{item.badge}</span>}
+                            {/* Le rendu du badge est conditionnel */}
+                            {item.badge && (
+                                <span className="ml-auto bg-rose-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                                    {item.badge}
+                                </span>
+                            )}
                         </Link>
                     ))}
                 </nav>
             </div>
             <div>
-                <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-50 font-semibold transition-colors">
-                    <LogOut/>
-                    <span>Déconnexion</span>
-                </button>
+                <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-50 font-semibold transition-colors">
+    <LogOut/>
+    <span>Déconnexion</span>
+</button>
             </div>
         </div>
     );
 };
+
+
 
 
 export default function AccountLayout({ children }) {

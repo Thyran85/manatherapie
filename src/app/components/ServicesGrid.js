@@ -6,12 +6,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const servicesList = [
-    { title: "MANAXFACE", category: "Drainage Visage", description: "Pour un visage visiblement dégonflé, lifté et lumineux.", link: "/soins/manaxface", bookingLink: "/contact",imageSrc: "/images/hero-manaxface.jpg" },
-    { title: "MANAXDRAIN", category: "Drainage Corps", description: "Détoxifiez votre organisme, luttez contre la rétention d'eau.", link: "/soins/manaxdrain",bookingLink: "/contact", imageSrc: "/images/hero-manaxdrain.jpg" },
-    { title: "MANAXSCULPT", category: "Remodelage Manuel", description: "'Cassez' la cellulite adipeuse et tonifiez votre peau.", link: "/soins/manaxsculpt",bookingLink: "/contact", imageSrc: "/images/hero-manaxsculpt.jpg" },
-    { title: "MADÉROXDRAIN", category: "Madero & Drainage", description: "Double action anti-cellulite pour une perte de centimètres visible.", link: "/soins/maderoxdrain", bookingLink: "/contact",imageSrc: "/images/hero-maderoxdrain.jpg" },
-    { title: "MADÉROXICE", category: "Madero & Cryo", description: "Effet tenseur et raffermissant immédiat grâce au choc thermique.", link: "/soins/maderoxice",bookingLink: "/contact", imageSrc: "/images/hero-maderoxice.jpg" },
-    { title: "MANAFAST", category: "Soin Express", description: "Un protocole intensif de 25 minutes sur une zone ciblée.", link: "/soins/manafast",bookingLink: "/contact", imageSrc: "/images/hero-manafast.jpg" },
+    { title: "MANAXFACE", category: "Drainage Visage", description: "Pour un visage visiblement dégonflé, lifté et lumineux.", link: "/soins/manaxface", bookingLink: "/compte/rendez-vous", imageSrc: "/images/hero-manaxface.jpg" },
+    { title: "MANAXDRAIN", category: "Drainage Corps", description: "Détoxifiez votre organisme, luttez contre la rétention d'eau.", link: "/soins/manaxdrain", bookingLink: "/compte/rendez-vous", imageSrc: "/images/hero-manaxdrain.jpg" },
+    { title: "MANAXSCULPT", category: "Remodelage Manuel", description: "'Cassez' la cellulite adipeuse et tonifiez votre peau.", link: "/soins/manaxsculpt", bookingLink: "/compte/rendez-vous", imageSrc: "/images/hero-manaxsculpt.jpg" },
+    { title: "MADÉROXDRAIN", category: "Madero & Drainage", description: "Double action anti-cellulite pour une perte de centimètres visible.", link: "/soins/maderoxdrain", bookingLink: "/compte/rendez-vous", imageSrc: "/images/hero-maderoxdrain.jpg" },
+    { title: "MADÉROXICE", category: "Madero & Cryo", description: "Effet tenseur et raffermissant immédiat grâce au choc thermique.", link: "/soins/maderoxice", bookingLink: "/compte/rendez-vous", imageSrc: "/images/hero-maderoxice.jpg" },
+    { title: "MANAFAST", category: "Soin Express", description: "Un protocole intensif de 25 minutes sur une zone ciblée.", link: "/soins/manafast", bookingLink: "/compte/rendez-vous", imageSrc: "/images/hero-manafast.jpg" },
 ];
 
 const containerVariants = {

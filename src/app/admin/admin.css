@@ -1,0 +1,43 @@
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+/* Forcer tous les événements à avoir un affichage flexible et à permettre le retour à la ligne */
+.rbc-event {
+    display: flex !important;
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important; /* Permet au texte de passer à la ligne */
+    padding: 3px 5px !important;
+    font-size: 13px !important; /* Augmenter légèrement la taille de la police */
+}
+
+/* S'assurer que le contenu à l'intérieur de l'événement ne déborde pas */
+.rbc-event-content {
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important;
+}
+
+/* Surcharger la hauteur minimale pour que le texte ait de la place, surtout sur la vue 'mois' */
+.rbc-month-view .rbc-event {
+    min-height: 24px !important; /* Ajustez si nécessaire */
+}
+
+/* Empêcher les cases de la grille de changer de taille */
+.rbc-time-slot, .rbc-day-slot .rbc-time-slot {
+    flex-basis: auto !important;
+    flex-grow: 1 !important;
+}
+
+/* S'assurer que le calendrier utilise tout l'espace disponible */
+.rbc-calendar {
+    width: 100% !important;
+}
+
+/* Améliorer la lisibilité de l'heure sur les événements */
+.rbc-event-label {
+    font-weight: bold;
+    margin-right: 5px;
+}

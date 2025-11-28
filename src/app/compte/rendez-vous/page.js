@@ -5,12 +5,16 @@ import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/fr';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, Fragment, useMemo } from 'react';
-import { PlusCircle, Calendar, List, X, AlertTriangle, Video, MapPin, Search, Clock,CalendarIcon } from 'lucide-react';
+import { useState, Fragment, useMemo,useEffect } from 'react';
+import { PlusCircle, Calendar, List, X, AlertTriangle, Video, MapPin, Search, Clock,CalendarIcon,Tag,Loader } from 'lucide-react';
 import { Dialog, Transition, Tab } from '@headlessui/react';
 import toast, { Toaster } from 'react-hot-toast';
 import { servicesDetails } from '@/app/soins/servicesData';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import useSWR, { mutate } from 'swr';
+
 
 // Configurer Moment.js en français
 moment.locale('fr');
@@ -18,13 +22,24 @@ const localizer = momentLocalizer(moment);
 
 const messages = { today: "Aujourd'hui", previous: '‹', next: '›', month: 'Mois', week: 'Semaine', day: 'Jour', agenda: 'Agenda', noEventsInRange: 'Aucun rendez-vous.' };
 
-// Données factices pour les événements
-const allEvents = [
-    { id: 0, title: 'MANAXDRAIN', start: new Date(2025, 10, 10, 14, 0), end: new Date(2025, 10, 10, 15, 0), status: 'confirmé', userOwns: true, type: 'soin', location: "24 impasse de l’estivage 13800 Istres" },
-    { id: 1, title: 'Coaching en Ligne', start: new Date(2025, 10, 18, 10, 0), end: new Date(2025, 10, 18, 11, 0), status: 'confirmé', userOwns: true, type: 'coaching', location: "Lien Meet disponible", meetLink: "https://meet.google.com/xyz-abc-def" },
-    { id: 2, title: 'Créneau Réservé', start: new Date(2025, 10, 12, 11, 0), end: new Date(2025, 10, 12, 12, 0), status: 'occupé', userOwns: false,type: 'soin' },
-    { id: 3, title: 'Maderothérapie', start: new Date(2025, 9, 28, 16, 0), end: new Date(2025, 9, 28, 17, 0), status: 'passé', userOwns: true, type: 'soin', location: "24 impasse de l’estivage 13800 Istres" },
-];
+
+
+const LoadingSpinner = () => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-4">
+        <Loader className="h-12 w-12 animate-spin text-[#af4d30]" />
+        <p className="mt-4 text-gray-500 font-semibold">Chargement des données...</p>
+    </div>
+);
+
+const getStatusBadge = (status) => {
+    const styles = {
+        'confirmé': 'bg-green-100 text-green-800',
+        'en attente': 'bg-blue-100 text-blue-800',
+        'annulé': 'bg-red-100 text-red-800',
+        'terminé': 'bg-gray-100 text-gray-800',
+    };
+    return styles[status] || 'bg-yellow-100 text-yellow-800';
+};
 
 // Style personnalisé pour les événements
 const eventStyleGetter = (event) => {
@@ -33,20 +48,66 @@ const eventStyleGetter = (event) => {
         border: 'none',
         color: 'white',
         fontSize: '0.8rem',
+        opacity: 0.9,
     };
-    if (event.status === 'confirmé') style.backgroundColor = '#28a745'; // Vert
-    else if (event.status === 'à venir') style.backgroundColor = '#17a2b8'; // Bleu
-    else if (event.status === 'occupé') style.backgroundColor = '#dc3545'; // Rouge
+    switch (event.status) {
+        case 'confirmé':
+            style.backgroundColor = '#28a745'; // Vert
+            break;
+        case 'en attente':
+            style.backgroundColor = '#17a2b8'; // Bleu
+            break;
+        case 'annulé':
+            style.backgroundColor = '#dc3545'; // Rouge
+            style.opacity = 0.6;
+            break;
+        case 'terminé':
+            style.backgroundColor = '#6c757d'; // Gris
+            style.opacity = 0.7;
+            break;
+        case 'occupé':
+            style.backgroundColor = '#343a40'; // Noir/Gris foncé
+            break;
+        default:
+            style.backgroundColor = '#ffc107'; // Jaune par défaut
+    }
     return { style };
 };
+
 
 const AppointmentDetailModal = ({ event, isOpen, setIsOpen }) => {
     if (!event) return null;
 
-    const onCancel = () => {
-        // Logique de suppression (ici, un simple toast)
-        toast.success("Votre rendez-vous a été annulé.");
-        setIsOpen(false);
+    const getStatusBadge = (status) => {
+        const styles = {
+            'confirmé': 'bg-green-100 text-green-800',
+            'en attente': 'bg-blue-100 text-blue-800',
+            'annulé': 'bg-red-100 text-red-800',
+            'terminé': 'bg-gray-100 text-gray-800',
+        };
+        return styles[status] || 'bg-yellow-100 text-yellow-800';
+    };
+
+    const onCancel = async () => {
+        const toastId = toast.loading("Annulation en cours...");
+        try {
+            const res = await fetch('/api/appointments/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appointmentId: event.id }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || "Impossible d'annuler.");
+            }
+            
+            toast.success("Rendez-vous annulé.", { id: toastId });
+            mutate('/api/appointments'); // Redéclenche la récupération des données pour mettre à jour l'UI
+            setIsOpen(false);
+        } catch (err) {
+            toast.error(err.message, { id: toastId });
+        }
     };
 
     return (
@@ -61,6 +122,10 @@ const AppointmentDetailModal = ({ event, isOpen, setIsOpen }) => {
                             <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                                 <Dialog.Title as="h3" className="text-2xl font-bold leading-6 text-[#1f2937]">{event.title}</Dialog.Title>
                                 <div className="mt-4 space-y-3">
+                                    <p className="flex items-center gap-2">
+                                        <Tag size={16} className="text-[#af4d30]"/> 
+                                        Statut : <span className={`px-2 py-1 text-xs font-bold rounded-full ${getStatusBadge(event.status)}`}>{event.status}</span>
+                                    </p>
                                     <p className="flex items-center gap-2"><Calendar size={16} className="text-[#af4d30]"/> {moment(event.start).format('dddd D MMMM YYYY')}</p>
                                     <p className="flex items-center gap-2"><Clock size={16} className="text-[#af4d30]"/> De {moment(event.start).format('HH:mm')} à {moment(event.end).format('HH:mm')}</p>
                                     <p className="flex items-center gap-2">
@@ -73,7 +138,9 @@ const AppointmentDetailModal = ({ event, isOpen, setIsOpen }) => {
                                 </div>
                                 <div className="mt-6 flex gap-4">
                                     <button onClick={() => setIsOpen(false)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium">Fermer</button>
-                                    <button onClick={onCancel} className="flex-1 rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200">Annuler le RDV</button>
+                                    {(event.status === 'en attente' || event.status === 'confirmé') && (
+                                     <button onClick={onCancel} className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Annuler le RDV</button>
+                                    )}
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>
@@ -85,27 +152,44 @@ const AppointmentDetailModal = ({ event, isOpen, setIsOpen }) => {
 };
 
 
-const CreateAppointmentModal = ({ slot, isOpen, setIsOpen }) => {
-    const router = useRouter(); // Initialiser le router
-    const [selectedService, setSelectedService] = useState(Object.values(servicesDetails)[0].slug);
-    const [showAcompte, setShowAcompte] = useState(true);
+const CreateAppointmentModal = ({ slot, isOpen, setIsOpen, services })  => {
+    const router = useRouter();
+    const safeServices = Array.isArray(services) ? services : [];
+    const [selectedServiceSlug, setSelectedServiceSlug] = useState('');
+    const [notes, setNotes] = useState('');
+    const [startTime, setStartTime] = useState(new Date());
 
-    const handleServiceChange = (e) => {
-        const serviceSlug = e.target.value;
-        setSelectedService(serviceSlug);
-        const service = servicesDetails[serviceSlug];
-        // On vérifie si le service a un prix ou s'il est "Sur devis"
-        setShowAcompte(service.pricing.options[0]?.price !== 'Sur devis');
-    };
+    useEffect(() => {
+        if (isOpen) {
+            setStartTime(slot ? new Date(slot.start) : new Date());
+            setNotes(''); // On réinitialise les notes à chaque ouverture
+
+            // On initialise le service sélectionné seulement si la liste est chargée et qu'aucun service n'est encore choisi
+            if (safeServices.length > 0 && selectedServiceSlug === '') {
+                setSelectedServiceSlug(safeServices[0].slug);
+            }
+        }
+    }, [slot, isOpen,safeServices]);
+
+    const service = safeServices.find(s => s.slug === selectedServiceSlug);
     
-    const onConfirm = (e) => {
+     const onConfirm = async (e) => {
         e.preventDefault();
-        toast.success("Votre demande est envoyée ! Redirection vers le paiement...");
+        const toastId = toast.loading("Création de votre rendez-vous...");
+        try {
+            const res = await fetch('/api/appointments/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serviceSlug: selectedServiceSlug, startTime, notes }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Erreur lors de la création.");
+            toast.success("Redirection vers la page de paiement...", { id: toastId });
+            router.push(`/compte/paiement/${data.appointmentId}`);
+        } catch (err) {
+            toast.error(err.message, { id: toastId });
+        }
         setIsOpen(false);
-        // SIMULATION : Rediriger vers une page de paiement après un délai
-        setTimeout(() => {
-            router.push('/paiement'); 
-        }, 1500);
     };
 
     return (
@@ -120,50 +204,41 @@ const CreateAppointmentModal = ({ slot, isOpen, setIsOpen }) => {
                             <Dialog.Panel className="w-full max-w-lg transform rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
                                 <Dialog.Title as="h3" className="text-2xl font-bold text-[#1f2937]">Nouveau Rendez-vous</Dialog.Title>
                                 
-                                <form onSubmit={onConfirm} className="mt-6 space-y-4">
-                                    {/* Si on n'a pas cliqué sur le calendrier, on affiche le choix de date */}
-                                    {!slot && (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="font-semibold text-sm">Date</label>
-                                                <input type="date" className="w-full mt-1 p-3 border rounded-lg"/>
-                                            </div>
-                                             <div>
-                                                <label className="font-semibold text-sm">Heure</label>
-                                                <input type="time" className="w-full mt-1 p-3 border rounded-lg"/>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* Si on a cliqué sur le calendrier, on affiche le créneau */}
-                                    {slot && <p className="text-gray-500 mt-1">Créneau : {moment(slot.start).format('dddd D MMMM, HH:mm')}</p>}
-
+<form onSubmit={onConfirm} className="mt-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="font-semibold text-sm">Type de soin</label>
-                                        <select onChange={handleServiceChange} className="w-full mt-1 p-3 border border-gray-200 rounded-lg">
-                                            {Object.values(servicesDetails).map(s => <option key={s.slug} value={s.slug}>{s.title}</option>)}
-                                            <option value="coaching-ligne">Coaching en Ligne</option>
-                                            <option value="coaching-presentiel">Coaching Présentiel</option>
-                                        </select>
+                                        <label className="font-semibold text-sm">Date</label>
+                                        <input type="date" value={moment(startTime).format('YYYY-MM-DD')} onChange={e => setStartTime(moment(e.target.value).toDate())} required className="w-full mt-1 p-3 border rounded-lg"/>
                                     </div>
-
-                                    {/* Affichage conditionnel de l'acompte */}
-                                    {showAcompte && (
-                                        <div>
-                                            <label className="font-semibold text-sm">Acompte Requis</label>
-                                            <input type="text" value="15.00€" readOnly className="w-full mt-1 p-3 border bg-gray-100 text-gray-500 rounded-lg"/>
-                                        </div>
-                                    )}
-
                                     <div>
-                                        <label className="font-semibold text-sm">Notes (optionnel)</label>
-                                        <textarea placeholder="Indiquez ici toute information utile..." className="w-full mt-1 p-3 border border-gray-200 rounded-lg" rows="3"></textarea>
+                                        <label className="font-semibold text-sm">Heure</label>
+                                        <input type="time" value={moment(startTime).format('HH:mm')} onChange={e => {
+                                            const [hour, minute] = e.target.value.split(':');
+                                            setStartTime(moment(startTime).hour(hour).minute(minute).toDate());
+                                        }} required className="w-full mt-1 p-3 border rounded-lg"/>
                                     </div>
-                                    
-                                    <div className="pt-4 flex gap-4">
-                                        <button type="button" onClick={() => setIsOpen(false)} className="flex-1 rounded-lg border border-gray-300 py-2.5 font-medium">Annuler</button>
-                                        <button type="submit" className="flex-1 rounded-lg bg-[#af4d30] py-2.5 font-medium text-white hover:bg-opacity-90">Confirmer & Payer l'acompte</button>
+                                </div>
+                                <div>
+                                    <label className="font-semibold text-sm">Type de soin</label>
+                                    <select value={selectedServiceSlug} onChange={(e) => setSelectedServiceSlug(e.target.value)} required className="w-full mt-1 p-3 border rounded-lg">
+                                        {safeServices.map(s => <option key={s.slug} value={s.slug}>{s.title}</option>)}
+                                    </select>
+                                </div>
+                                {service && (service.acompte > 0) &&
+                                    <div>
+                                        <label className="font-semibold text-sm">Acompte Requis</label>
+                                        <input type="text" value={`${service.acompte}€`} readOnly className="w-full mt-1 p-3 border bg-gray-100 rounded-lg"/>
                                     </div>
-                                </form>
+                                }
+                                <div>
+                                    <label className="font-semibold text-sm">Notes (optionnel)</label>
+                                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full mt-1 p-3 border rounded-lg" rows="3"></textarea>
+                                </div>
+                                <div className="pt-4 flex gap-4">
+                                    <button type="button" onClick={() => setIsOpen(false)} className="flex-1 rounded-lg border py-2.5">Annuler</button>
+                                    <button type="submit" className="flex-1 rounded-lg bg-[#af4d30] py-2.5 text-white">Confirmer & Payer</button>
+                                </div>
+                            </form>
                             </Dialog.Panel>
                         </Transition.Child>
                     </div>
@@ -173,24 +248,41 @@ const CreateAppointmentModal = ({ slot, isOpen, setIsOpen }) => {
     );
 };
 
+const fetcher = url => fetch(url).then(res => {
+    if (!res.ok) {
+        if (res.status === 401) return { error: 'Unauthorized' };
+        throw new Error('An error occurred while fetching the data.');
+    }
+    return res.json();
+});
 const AppointmentCard = ({ event, onSelect }) => (
+    
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
         <div className="flex items-center gap-4">
             <div className={`w-2.5 h-16 rounded-full ${eventStyleGetter(event).style.backgroundColor}`}></div>
             <div>
-                <p className="font-bold text-lg text-[#1f2937]">{event.title}</p>
+                 <div className="flex items-center gap-3 mb-1">
+                    <p className="font-bold text-lg text-[#1f2937]">{event.title}</p>
+                    {/* Ce code fonctionnera maintenant */}
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${getStatusBadge(event.status)}`}>
+                        {event.status}
+                    </span>
+                </div>
                 <p className="text-sm text-gray-500 flex items-center gap-2"><CalendarIcon size={14}/> {moment(event.start).format('dddd D MMMM YYYY')}</p>
                 <p className="text-sm text-gray-500 flex items-center gap-2"><Clock size={14}/> {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}</p>
             </div>
         </div>
         <div className="flex items-center gap-3">
-             <span className={`text-xs font-bold uppercase px-2 py-1 rounded-full ${event.status === 'confirmé' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{event.status}</span>
+            
             <button onClick={() => onSelect(event)} className="text-sm font-semibold text-[#af4d30] hover:underline">Détails</button>
         </div>
     </motion.div>
 );
 
 export default function AppointmentsPage() {
+    const { data: allEvents, error: eventsError, isLoading: isLoadingEvents } = useSWR('/api/appointments', fetcher);
+    const { data: services, error: servicesError, isLoading: isLoadingServices } = useSWR('/api/services', fetcher);
+    const router = useRouter(); 
     const [activeTab, setActiveTab] = useState('calendar');
     const [viewMode, setViewMode] = useState('calendar');
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -201,9 +293,19 @@ export default function AppointmentsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
 
-    const [calendarView, setCalendarView] = useState('month'); 
+    const [calendarView, setCalendarView] = useState('week'); 
 
-    const myEvents = allEvents.filter(e => e.userOwns);
+    useEffect(() => {
+        if (allEvents && allEvents.error === 'Unauthorized') {
+            // L'API nous dit que nous ne sommes pas autorisés, on redirige vers le login.
+            router.push('/auth/login?callbackUrl=/compte/rendez-vous');
+        }
+    }, [allEvents, router]);
+
+    const validEvents = useMemo(() => Array.isArray(allEvents) ? allEvents : [], [allEvents]);
+
+
+    const myEvents = useMemo(() => validEvents.filter(e => e.userOwns), [validEvents]);
 
     const filteredEvents = useMemo(() => {
         return myEvents.filter(event => {
@@ -211,7 +313,7 @@ export default function AppointmentsPage() {
             const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
             return matchesSearch && matchesStatus;
         });
-    }, [searchTerm, statusFilter]);
+    }, [myEvents, searchTerm, statusFilter]);
 
     const handleEventSelect = (event) => {
         if (!event.userOwns) {
@@ -232,11 +334,36 @@ export default function AppointmentsPage() {
         setCreateModalOpen(true);
     };
 
-     const handleNewAppointment = () => {
-        setSelectedSlot({
-            start: new Date(), // On initialise avec la date/heure actuelle
-            end: moment().add(1, 'hour').toDate()
-        });
+    const formattedEvents = useMemo(() => {
+        return validEvents.map(event => ({
+            ...event,
+            start: new Date(event.start),
+            end: new Date(event.end),
+        }));
+    }, [validEvents]);
+
+    const isLoading = isLoadingEvents || isLoadingServices;
+     
+    if (isLoading) {
+        return <LoadingSpinner />;
+    }
+
+    if (allEvents && allEvents.error === 'Unauthorized') {
+        return <LoadingSpinner />;
+    }
+
+    if (eventsError || servicesError) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500">
+                <AlertTriangle className="h-12 w-12 mb-4" />
+                <p className="font-semibold">Erreur de chargement des données.</p>
+                <p>Veuillez rafraîchir la page.</p>
+            </div>
+        );
+    }
+
+      const handleNewAppointment = () => {
+        setSelectedSlot(null); // IMPORTANT : Indique au modal qu'aucune date n'est présélectionnée
         setCreateModalOpen(true);
     };
 
@@ -255,10 +382,7 @@ export default function AppointmentsPage() {
                 </motion.h1>
                 <div className="flex items-center gap-4">
                     {/* Switch de vue */}
-                    <div className="flex gap-1 bg-gray-200 p-1 rounded-lg">
-                        <button onClick={() => setViewMode('calendar')} className={`p-1.5 rounded-md ${viewMode === 'calendar' ? 'bg-white shadow-sm' : ''}`}><Calendar size={20}/></button>
-                        <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}><List size={20}/></button>
-                    </div>
+                    
                     <motion.button onClick={handleNewAppointment} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 bg-[#af4d30] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-opacity-90">
                         <PlusCircle size={20}/>
                         <span>Nouveau RDV</span>
@@ -298,7 +422,7 @@ export default function AppointmentsPage() {
                         <div className="bg-white p-2 sm:p-4 rounded-2xl shadow-sm">
                         <BigCalendar
                             localizer={localizer}
-                            events={allEvents}
+                            events={formattedEvents}
                             date={currentDate} onNavigate={date => setCurrentDate(date)}
                             style={{ height: 600 }}
                             messages={messages}
@@ -324,12 +448,26 @@ export default function AppointmentsPage() {
                         </div>
                     )}
                     {activeTab === 'coaching' && (
-                         <div className="space-y-4">
-                            {myEvents.filter(e => e.type === 'coaching').map(event => (
-                                <AppointmentCard key={event.id} event={event} onSelect={handleEventSelect} />
-                            ))}
-                        </div>
-                    )}
+    <div className="space-y-4">
+        {myEvents.filter(e => e.type.startsWith('coaching')).length > 0 ? (
+            myEvents.filter(e => e.type.startsWith('coaching')).map(event => (
+                <AppointmentCard key={event.id} event={event} onSelect={handleEventSelect} />
+            ))
+        ) : (
+            <div className="text-center bg-white p-12 rounded-2xl shadow-sm">
+                <Video className="mx-auto h-16 w-16 text-gray-300" /> {/* Icône de coaching */}
+                <h3 className="mt-4 text-xl font-bold text-gray-800">Aucun coaching programmé</h3>
+                <p className="mt-2 text-gray-500">Vous n'avez pas encore de séance de coaching à venir.</p>
+                <div className="mt-6">
+                    <button onClick={handleNewAppointment} className="flex items-center gap-2 mx-auto ...">
+                        <PlusCircle size={20}/>
+                        <span>Réserver une séance</span>
+                    </button>
+                </div>
+            </div>
+        )}
+    </div>
+)}
                     </motion.div>
                 ) : (
                     <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -345,13 +483,33 @@ export default function AppointmentsPage() {
                                 </div>
                                 <button onClick={() => handleEventSelect(event)} className="text-sm font-semibold text-[#af4d30] hover:underline">Voir détails</button>
                             </div>
-                        )) : <p className="text-center text-gray-500 py-8">Aucun rendez-vous ne correspond à vos filtres.</p>}
+                        )) :<div className="text-center bg-white p-12 rounded-2xl shadow-sm">
+            <CalendarIcon className="mx-auto h-16 w-16 text-gray-300" />
+            <h3 className="mt-4 text-xl font-bold text-gray-800">Aucun rendez-vous trouvé</h3>
+            <p className="mt-2 text-gray-500">Vous n'avez pas encore de rendez-vous correspondant à ces filtres.</p>
+            <div className="mt-6">
+                <button
+                    onClick={handleNewAppointment}
+                    className="flex items-center gap-2 mx-auto bg-[#af4d30] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-opacity-90"
+                >
+                    <PlusCircle size={20}/>
+                    <span>Prendre un nouveau RDV</span>
+                </button>
+            </div>
+        </div>}
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <AppointmentDetailModal event={selectedEvent} isOpen={isDetailModalOpen} setIsOpen={setDetailModalOpen} />
-            <CreateAppointmentModal slot={selectedSlot} isOpen={isCreateModalOpen} setIsOpen={setCreateModalOpen} />
+           {isCreateModalOpen && (
+                 <CreateAppointmentModal 
+                    slot={selectedSlot} 
+                    isOpen={isCreateModalOpen} 
+                    setIsOpen={setCreateModalOpen} 
+                    services={services} 
+                 />
+            )}
         </div>
     );
 }

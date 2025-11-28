@@ -122,7 +122,7 @@ export default function CoachingPage() {
                                 <p className="text-gray-600 mb-6 flex-grow">La flexibilité du digital, la profondeur de l'échange. Où que vous soyez, nous avançons ensemble via Zoom ou Meet.</p>
                             </div>
                             <div className="mt-auto p-8 pt-0">
-                                <Link href="/contact" className="block w-full text-center bg-[#1f2937] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#af4d30] transition-colors">
+                                <Link href="/compte/rendez-vous" className="block w-full text-center bg-[#1f2937] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#af4d30] transition-colors">
                                     Réserver ma séance découverte (En Ligne)
                                 </Link>
                             </div>
@@ -135,7 +135,7 @@ export default function CoachingPage() {
                                 <p className="text-gray-600 mb-6 flex-grow">La puissance de la rencontre. Retrouvez-moi dans un espace confidentiel pour un travail en profondeur.</p>
                             </div>
                             <div className="mt-auto p-8 pt-0">
-                                <Link href="/contact" className="block w-full text-center bg-[#1f2937] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#af4d30] transition-colors">
+                                <Link href="/compte/rendez-vous" className="block w-full text-center bg-[#1f2937] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#af4d30] transition-colors">
                                     Réserver ma séance découverte (Présentiel)
                                 </Link>
                             </div>
@@ -158,7 +158,7 @@ export default function CoachingPage() {
              <ContactCTA />
 
              <FloatingCtaButton 
-                href="/contact"
+                href="/compte/rendez-vous"
                 text="Réserver ma séance découverte"
             />
 

@@ -7,6 +7,9 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { usePathname } from 'next/navigation'; 
 import SiteBackground from "./components/SiteBackground"; 
+import AuthProvider from './components/AuthProvider';
+import { CartProvider } from '@/context/CartContext'; 
+import { Toaster } from 'react-hot-toast';
 
 const leagueSpartan = League_Spartan({
   subsets: ["latin"],
@@ -20,6 +23,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr">
       <body className={leagueSpartan.className}> 
+        <AuthProvider>
+          <CartProvider> 
+            <Toaster 
+                            position="top-center"
+                            reverseOrder={false}
+                        />
         <SiteBackground />
        <div className="flex flex-col min-h-screen">
            {isFullLayoutPage && <Navbar />}
@@ -28,6 +37,8 @@ export default function RootLayout({ children }) {
           </main>
            {isFullLayoutPage && <Footer />}
         </div>
+        </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

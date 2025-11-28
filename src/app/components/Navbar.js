@@ -6,7 +6,9 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, ShoppingCart  } from 'lucide-react';
+import { ChevronDown, ShoppingCart, UserCircle } from 'lucide-react'; // Ajout de UserCircle
+import { useSession } from 'next-auth/react'; // Hook pour connaître l'état de la session
+import { useCart } from '@/context/CartContext';
 
 const soinsSubMenu = [
     { title: "MANAXFACE (Visage)", href: "/soins/manaxface" },
@@ -43,6 +45,12 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSoinsOpen, setIsSoinsOpen] = useState(false); // État pour le sous-menu
   const pathname = usePathname();
+
+  const { data: session, status } = useSession(); // Récupère la session
+  const { cartItems } = useCart(); 
+
+  const isAuthenticated = status === 'authenticated';
+    const cartItemCount = cartItems.length;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -115,39 +123,62 @@ const Navbar = () => {
           <NavLink href="/contact" isScrolled={isScrolled}>Contact</NavLink>
         </div>
 
-        {/* --- SECTION DES BOUTONS ENTIÈREMENT CORRIGÉE AVEC COULEURS DIRECTES --- */}
-        <div className="hidden md:flex items-center space-x-4 text-sm">
-          {/* Bouton Secondaire : Se Connecter */}
-          <Link 
-            href="/auth/login" 
-            className={`font-medium px-4 py-1.5 rounded-full border-2 transition-all duration-300 ${
-              isScrolled 
-                ? 'text-[#af4d30] border-[#af4d30] hover:bg-[#af4d30] hover:text-white' 
-                : 'text-white border-white hover:bg-white hover:text-[#af4d30]' // <-- CORRECTION CLÉ ICI
-            }`}
-          >
-            Se Connecter
-          </Link>
-
-          {/* Bouton Principal : S'inscrire */}
-          <a 
-            href="/auth/register" 
-            className={`font-medium px-4 py-2 rounded-full transition-all duration-300 transform hover:scale-105 ${
-              isScrolled 
-                ? 'bg-[#af4d30] text-white hover:bg-opacity-90' // <-- CORRECTION CLÉ ICI
-                : 'bg-white text-[#af4d30] hover:bg-white/90'   // <-- CORRECTION CLÉ ICI
-            }`}
-          >
-            S'inscrire
-          </a>
-           <Link href="/panier" className={`relative transition-colors duration-300 ${isScrolled ? 'text-gray-600 hover:text-[#af4d30]' : 'text-white hover:text-white/80'}`}>
+         <div className="hidden md:flex items-center space-x-4 text-sm">
+                    {/* --- MODIFICATION 1 : Affichage conditionnel des boutons d'action --- */}
+                    {isAuthenticated ? (
+                        // Si l'utilisateur est authentifié
+                        <Link 
+                            href="/compte" 
+                            title="Mon Compte"
+                            className={`flex items-center gap-2 font-medium px-4 py-1.5 rounded-full border-2 transition-all duration-300 ${
+                                isScrolled 
+                                ? 'text-[#af4d30] border-[#af4d30] hover:bg-[#af4d30] hover:text-white' 
+                                : 'text-white border-white hover:bg-white hover:text-[#af4d30]'
+                            }`}
+                        >
+                            <UserCircle size={20} />
+                            <span>Mon Compte</span>
+                        </Link>
+                    ) : (
+                        // Si l'utilisateur n'est PAS authentifié
+                        <>
+                            <Link 
+                                href="/auth/login" 
+                                className={`font-medium px-4 py-1.5 rounded-full border-2 transition-all duration-300 ${
+                                  isScrolled 
+                                    ? 'text-[#af4d30] border-[#af4d30] hover:bg-[#af4d30] hover:text-white' 
+                                    : 'text-white border-white hover:bg-white hover:text-[#af4d30]'
+                                }`}
+                            >
+                                Se Connecter
+                            </Link>
+                            <a 
+                                href="/auth/register" 
+                                className={`font-medium px-4 py-2 rounded-full transition-all duration-300 transform hover:scale-105 ${
+                                  isScrolled 
+                                    ? 'bg-[#af4d30] text-white hover:bg-opacity-90'
+                                    : 'bg-white text-[#af4d30] hover:bg-white/90'
+                                }`}
+                            >
+                                S'inscrire
+                            </a>
+                        </>
+                    )}
+                    
+                    {/* --- MODIFICATION 2 : Badge du panier dynamique --- */}
+                    <Link 
+                        href="/panier" 
+                        className={`relative transition-colors duration-300 ${isScrolled ? 'text-gray-600 hover:text-[#af4d30]' : 'text-white hover:text-white/80'}`}
+                        aria-label={`Panier contenant ${cartItemCount} article(s)`}
+                    >
                         <ShoppingCart size={24} />
-                        {/* Badge de notification (codé en dur avec "2") */}
-                        <div className="absolute -top-1 -right-2 w-4 h-4 bg-[#af4d30] text-white text-xs font-bold flex items-center justify-center rounded-full">
-                            2
-                        </div>
+                        {cartItemCount > 0 && (
+                            <div className="absolute -top-1 -right-2 w-5 h-5 bg-rose-500 text-white text-xs font-bold flex items-center justify-center rounded-full animate-pulse">
+                                {cartItemCount}
+                            </div>
+                        )}
                     </Link>
-        </div>
+                </div>
 
         <div className="md:hidden">
           <button onClick={() => setIsOpen(!isOpen)} className={`focus:outline-none ${isScrolled ? 'text-[#1f2937]' : 'text-white'}`}>

@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { servicesDetails } from '../servicesData';
 import PageHero from '@/app/components/PageHero';
 import BookingBar from '@/app/components/BookingBar';
@@ -52,7 +53,8 @@ const QuoteSection = ({ quote }) => {
     );
 }
 
-export default function SoinDetailPage({ params }) {
+export default function SoinDetailPage() {
+    const params = useParams();
     const { slug } = params;
     const service = servicesDetails[slug];
 
@@ -159,7 +161,7 @@ export default function SoinDetailPage({ params }) {
                                 <p className="text-gray-600 mb-4">{sub.text}</p>
                                 <div className="flex items-end justify-between">
                                     <p className="text-3xl font-bold text-[#1f2937]">{sub.price}</p>
-                                    <Link href="/contact" className="inline-block bg-[#C87A5E] text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-[#1f2937] transition-colors">
+                                    <Link href="/compte/rendez-vous" className="inline-block bg-[#C87A5E] text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-[#1f2937] transition-colors">
                                         Réserver
                                     </Link>
                                 </div>
@@ -284,7 +286,7 @@ export default function SoinDetailPage({ params }) {
                             <p className="text-5xl font-extrabold text-[#1f2937] mb-6">{opt.price}</p>
                             
                             <Link 
-                                href="/contact" 
+                                href="/compte/rendez-vous" 
                                 className={`w-full block px-6 py-3 rounded-lg font-semibold transition-colors duration-300 ${isPopular ? 'bg-[#af4d30] text-white hover:bg-[#D0482B]' : 'bg-gray-100 text-[#1f2937] hover:bg-gray-200'}`}
                             >
                                 Choisir cette option
@@ -310,7 +312,7 @@ export default function SoinDetailPage({ params }) {
                 animate={{ y: 0 }}
                 transition={{ type: 'spring', stiffness: 100 }}
             >
-                <Link href="/contact" className="bg-[#af4d30] text-white px-6 py-4 rounded-full font-semibold shadow-lg hover:bg-[#b56b50] transition-colors flex items-center gap-2">
+                <Link href="/compte/rendez-vous" className="bg-[#af4d30] text-white px-6 py-4 rounded-full font-semibold shadow-lg hover:bg-[#b56b50] transition-colors flex items-center gap-2">
                     Réserver ce Soin
                 </Link>
             </motion.div>

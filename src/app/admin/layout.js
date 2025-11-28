@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname,useRouter } from 'next/navigation';
 import { LayoutDashboard, Users, Calendar, Video, BarChart2, Tag, User, LogOut,Book } from 'lucide-react';
+import './admin.css'; 
+
 
 const navItems = [
     { name: "Dashboard", href: "/admin", icon: <LayoutDashboard/> },
@@ -16,6 +18,14 @@ const navItems = [
 
 export default function AdminLayout({ children }) {
     const pathname = usePathname();
+    const router = useRouter(); // On peut maintenant appeler useRouter ici
+
+    // La fonction de déconnexion est maintenant à l'intérieur du composant
+    const handleLogout = async () => {
+        await fetch('/api/admin/logout', { method: 'POST' });
+        router.push('/admin/login');
+        router.refresh();
+    };
 
     // On n'affiche pas le layout sur la page de login
     if (pathname === '/admin/login') {
@@ -47,7 +57,7 @@ export default function AdminLayout({ children }) {
                          <Link href="/admin/profil" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${pathname === '/admin/profil' ? 'bg-gray-100' : 'text-gray-600 hover:bg-gray-100'}`}>
                             <User/> <span className="font-semibold">Mon Compte</span>
                          </Link>
-                         <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-50 font-semibold">
+                         <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-50 font-semibold">
                             <LogOut/> <span>Déconnexion</span>
                          </button>
                     </div>
