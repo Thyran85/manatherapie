@@ -24,10 +24,12 @@ export async function POST(request, { params }) {
         }
         const user = userResult.rows[0];
 
+        const messageWithEmailInfo = `L'administration vous a envoyé un email. ${message}`;
+
         // Insérer la notification dans la base de données
         await clientDB.query(
             'INSERT INTO notifications ("userId", message, link) VALUES ($1, $2, $3)',
-            [userId, message, '/compte/notifications'] // Lien générique
+            [userId, messageWithEmailInfo, null]
         );
 
         // Envoyer aussi un email au client

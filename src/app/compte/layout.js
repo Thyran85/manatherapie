@@ -3,28 +3,71 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calendar, Video, User, Bell, LogOut, X, Menu,ShoppingCart } from 'lucide-react';
-import { useState } from 'react';
+import { LayoutDashboard, Calendar, Video, User, Bell, LogOut, Menu, ShoppingCart } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion'; // Importer AnimatePresence
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useCart } from '@/context/CartContext';
 
+const READ_STORAGE_KEY = 'compte_notification_read_ids';
 
 
 // On extrait le menu dans son propre composant pour le réutiliser
 const SideNav = () => {
     const pathname = usePathname();
-    const router = useRouter();
     const { cartItems } = useCart(); // Récupérer les items du panier
     const cartItemCount = cartItems.length;
+    const [notificationsBadge, setNotificationsBadge] = useState(null);
+
+    const loadReadIds = useCallback(() => {
+        if (typeof window === 'undefined') return new Set();
+        try {
+            const raw = window.localStorage.getItem(READ_STORAGE_KEY);
+            const parsed = raw ? JSON.parse(raw) : [];
+            return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+        } catch {
+            return new Set();
+        }
+    }, []);
+
+    const refreshNotificationsBadge = useCallback(async () => {
+        try {
+            const res = await fetch('/api/compte/notifications', { cache: 'no-store' });
+            if (!res.ok) {
+                setNotificationsBadge(null);
+                return;
+            }
+            const notifications = await res.json();
+            const readIds = loadReadIds();
+            const unreadCount = (Array.isArray(notifications) ? notifications : []).filter(
+                (notif) => !readIds.has(String(notif.id))
+            ).length;
+            setNotificationsBadge(unreadCount > 0 ? unreadCount : null);
+        } catch {
+            setNotificationsBadge(null);
+        }
+    }, [loadReadIds]);
+
+    useEffect(() => {
+        refreshNotificationsBadge();
+
+        const onNotificationsUpdated = () => refreshNotificationsBadge();
+        window.addEventListener('notifications-updated', onNotificationsUpdated);
+        window.addEventListener('focus', onNotificationsUpdated);
+
+        return () => {
+            window.removeEventListener('notifications-updated', onNotificationsUpdated);
+            window.removeEventListener('focus', onNotificationsUpdated);
+        };
+    }, [refreshNotificationsBadge]);
 
     const navItems = [
     { name: "Tableau de Bord", href: "/compte", icon: <LayoutDashboard/> },
     { name: "Mes Rendez-vous", href: "/compte/rendez-vous", icon: <Calendar/> },
     { name: "Mes Formations", href: "/compte/formations", icon: <Video/> },
     { name: "Mon Profil", href: "/compte/profil", icon: <User/> },
-    { name: "Notifications", href: "/compte/notifications", icon: <Bell/>, badge: 3 },
+    { name: "Notifications", href: "/compte/notifications", icon: <Bell/>, badge: notificationsBadge },
     { 
             name: "Mon Panier", 
             href: "/compte/panier", 
