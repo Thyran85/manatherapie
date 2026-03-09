@@ -19,22 +19,23 @@ const navItems = [
 export default function AdminLayout({ children }) {
     const pathname = usePathname();
     const router = useRouter(); // On peut maintenant appeler useRouter ici
+    const isLoginPage = pathname === '/admin/login';
 
     // La fonction de déconnexion est maintenant à l'intérieur du composant
     const handleLogout = async () => {
         await fetch('/api/admin/logout', { method: 'POST' });
-        router.push('/admin/login');
+        router.replace('/admin/login');
         router.refresh();
     };
 
     // On n'affiche pas le layout sur la page de login
-    if (pathname === '/admin/login') {
+    if (isLoginPage) {
         return <>{children}</>;
     }
 
     return (
         <div className=" bg-gray-100 min-h-screen">
-            <div className="relative z-[2] flex">
+            <div className="relative z-2 flex">
                 <aside className="fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 p-6 flex-col justify-between hidden lg:flex">
                     <div>
                         <div className="mb-10 text-center">

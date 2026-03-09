@@ -4,16 +4,16 @@ import { ArrowLeft, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { useState, useEffect } from 'react'; 
+import { useState, useEffect, useCallback, use } from 'react'; 
 
 export default function FormationDetailPage({ params }) {
-    const { slug } = params; // L'accès direct est OK dans un Client Component
+    const { slug } = use(params);
     const [course, setCourse] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Fonction pour récupérer les données du cours via notre nouvelle API
-    const fetchCourseDetails = async () => {
+    const fetchCourseDetails = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -33,13 +33,13 @@ export default function FormationDetailPage({ params }) {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [slug]);
 
     useEffect(() => {
         if (slug) { // On s'assure que le slug est disponible avant de lancer le fetch
             fetchCourseDetails();
         }
-    }, [slug]);
+    }, [slug, fetchCourseDetails]);
 
     // Fonction pour gérer la mise à jour du statut d'un achat
     const handleUpdatePurchaseStatus = async (purchaseId, newStatus) => {
@@ -78,7 +78,7 @@ export default function FormationDetailPage({ params }) {
             </Link>
             
              <div className="flex items-start gap-8 mb-8">
-                <div className="relative w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                <div className="relative w-48 h-32 rounded-lg overflow-hidden shrink-0">
                     <Image src={course.image_url || '/images/placeholder.png'} alt={course.title} fill className="object-cover"/>
                 </div>
                 <div>

@@ -1,20 +1,19 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { PlusCircle, Edit, Trash2, Search, X } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import TiptapEditor from '@/app/components/TiptapEditor'; // Assurez-vous que ce chemin est correct
 import toast from 'react-hot-toast';
 
+const INITIAL_BLOG_POST_STATE = { title: '', category: '', reading_time: '', slug: '' };
+
 // --- Le Composant Modal Entièrement Fonctionnel ---
 const BlogEditorModal = ({ isOpen, setIsOpen, onSave, postToEdit }) => {
     const isEditMode = Boolean(postToEdit);
-    
-    // État initial pour le formulaire
-    const initialState = { title: '', category: '', reading_time: '', slug: '' };
 
-    const [postData, setPostData] = useState(initialState);
+    const [postData, setPostData] = useState(INITIAL_BLOG_POST_STATE);
     const [content, setContent] = useState('');
     const [imageFile, setImageFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +30,7 @@ const BlogEditorModal = ({ isOpen, setIsOpen, onSave, postToEdit }) => {
                 });
                 setContent(postToEdit.content_html || '');
             } else {
-                setPostData(initialState);
+                setPostData(INITIAL_BLOG_POST_STATE);
                 setContent('<p>Commencez à écrire votre article ici...</p>');
             }
         }
@@ -101,7 +100,7 @@ const BlogEditorModal = ({ isOpen, setIsOpen, onSave, postToEdit }) => {
     };
 
     const closeModal = () => {
-        setPostData(initialState);
+        setPostData(INITIAL_BLOG_POST_STATE);
         setContent('');
         setImageFile(null);
         setIsOpen(false);
@@ -160,7 +159,7 @@ export default function BlogAdminPage() {
     const [postToEdit, setPostToEdit] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const fetchPosts = async () => {
+    const fetchPosts = useCallback(async () => {
         setIsLoading(true);
         try {
             const res = await fetch(`/api/admin/blog?search=${searchTerm}`);
@@ -172,13 +171,13 @@ export default function BlogAdminPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [searchTerm]);
 
     // Déclencher le fetch au chargement et quand le terme de recherche change
     useEffect(() => {
         const handler = setTimeout(() => fetchPosts(), 300);
         return () => clearTimeout(handler);
-    }, [searchTerm]);
+    }, [fetchPosts]);
 
     const handleCreate = () => {
         setPostToEdit(null);

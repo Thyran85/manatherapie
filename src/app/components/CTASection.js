@@ -6,30 +6,43 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import Image from 'next/image';
 
-const FloatingParticle = () => {
+const seeded = (seed) => {
+  const x = Math.sin(seed * 999) * 10000;
+  return x - Math.floor(x);
+};
+
+const FloatingParticle = ({ index }) => {
+    const s1 = seeded(index + 1);
+    const s2 = seeded(index + 11);
+    const s3 = seeded(index + 23);
+    const s4 = seeded(index + 47);
+    const s5 = seeded(index + 71);
+    const s6 = seeded(index + 97);
+    const s7 = seeded(index + 131);
+
     const style = useMemo(() => ({
         position: 'absolute',
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        width: `${Math.random() * 10 + 2}px`,
-        height: `${Math.random() * 8 + 1}px`,
+        top: `${s1 * 100}%`,
+        left: `${s2 * 100}%`,
+        width: `${s3 * 10 + 2}px`,
+        height: `${s4 * 8 + 1}px`,
         backgroundColor: 'rgba(255, 247, 237, 0.5)',
         borderRadius: '50%',
-      }), []);
+      }), [s1, s2, s3, s4]);
     
       const animation = useMemo(() => ({
-        x: [0, Math.random() * 40 - 20, 0],
-        y: [0, Math.random() * 40 - 20, 0],
-        scale: [1, Math.random() * 0.8 + 1, 1],
+        x: [0, s5 * 40 - 20, 0],
+        y: [0, s6 * 40 - 20, 0],
+        scale: [1, s7 * 0.8 + 1, 1],
         opacity: [0, 1, 0],
-      }), []);
+      }), [s5, s6, s7]);
     
       return (
         <motion.div
           style={style}
           animate={animation}
           transition={{
-            duration: Math.random() * 10 + 10,
+            duration: s1 * 10 + 10,
             repeat: Infinity,
             repeatType: 'loop',
             ease: 'easeInOut'
@@ -50,7 +63,7 @@ const CTASection = () => {
       />
 
       <div className="absolute inset-0">
-        {[...Array(30)].map((_, i) => <FloatingParticle key={i} />)}
+        {[...Array(30)].map((_, i) => <FloatingParticle key={i} index={i} />)}
       </div>
 
       <div 

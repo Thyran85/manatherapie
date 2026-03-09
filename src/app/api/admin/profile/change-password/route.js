@@ -18,7 +18,8 @@ async function verifyTokenAndGetAdminId(tokenValue) {
 
 export async function PUT(request) {
     // Schéma correct appliqué ici aussi.
-    const tokenCookie = cookies().get('admin-token');
+    const cookieStore = await cookies();
+    const tokenCookie = cookieStore.get('admin-token');
     const tokenValue = tokenCookie?.value;
     const adminId = await verifyTokenAndGetAdminId(tokenValue);
 

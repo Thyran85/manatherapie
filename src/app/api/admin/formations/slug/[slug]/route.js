@@ -12,7 +12,7 @@ const pool = new Pool({
  * @method GET
  */
 export async function GET(request, { params }) {
-    const { slug } = params;
+    const { slug } = await params;
     const client = await pool.connect();
 
     try {

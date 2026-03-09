@@ -11,7 +11,7 @@ const pool = new Pool({
  */
 export async function GET(request, { params }) {
     // On récupère le slug depuis les paramètres de la route dynamique
-    const { slug } = params;
+    const { slug } = await params;
     
     if (!slug) {
         return NextResponse.json({ message: "Slug manquant." }, { status: 400 });

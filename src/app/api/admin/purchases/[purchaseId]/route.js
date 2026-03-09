@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { sendCourseStatusEmail } from '@/lib/mail';
 
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,
@@ -12,15 +13,16 @@ const pool = new Pool({
 export async function PUT(request, { params }) {
     
 
-    const { purchaseId } = params;
-    const { status } = await request.json(); // Le frontend enverra le nouveau statut : 'accepté' ou 'refusé'
+    const { purchaseId } = await params;
+    const { status } = await request.json();
+    const normalizedStatus = status === 'annulé' ? 'refusé' : status;
 
     // 2. Validation des données
-    if (!purchaseId || !status) {
+    if (!purchaseId || !normalizedStatus) {
         return NextResponse.json({ message: "ID de l'achat et statut requis." }, { status: 400 });
     }
 
-    if (status !== 'accepté' && status !== 'refusé') {
+    if (normalizedStatus !== 'accepté' && normalizedStatus !== 'refusé') {
         return NextResponse.json({ message: "Statut invalide." }, { status: 400 });
     }
 
@@ -34,14 +36,30 @@ export async function PUT(request, { params }) {
             RETURNING *;
         `;
         
-        const result = await client.query(query, [status, purchaseId]);
+        const result = await client.query(query, [normalizedStatus, purchaseId]);
 
         if (result.rows.length === 0) {
             return NextResponse.json({ message: "Achat non trouvé." }, { status: 404 });
         }
 
-        // TODO: À l'avenir, on pourrait déclencher un email de confirmation ici pour informer le client
-        // que son accès à la formation est maintenant activé.
+        const detailsResult = await client.query(
+            `SELECT u.email, u.name as client_name, c.title as course_title
+             FROM user_courses uc
+             JOIN users u ON u.id = uc."userId"
+             JOIN courses c ON c.id = uc."courseId"
+             WHERE uc.id = $1`,
+            [purchaseId]
+        );
+
+        if (detailsResult.rows.length > 0) {
+            const details = detailsResult.rows[0];
+            await sendCourseStatusEmail({
+                to: details.email,
+                clientName: details.client_name,
+                courseTitle: details.course_title,
+                status: normalizedStatus,
+            });
+        }
 
         return NextResponse.json(result.rows[0]);
 

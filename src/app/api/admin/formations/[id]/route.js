@@ -12,7 +12,7 @@ const pool = new Pool({
 export async function GET(request, { params }) {
     
 
-    const { id } = params;
+    const { id } = await params;
     const client = await pool.connect();
 
     try {
@@ -47,7 +47,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
     
 
-    const { id } = params;
+    const { id } = await params;
     const client = await pool.connect();
     
     try {
@@ -106,7 +106,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     
 
-    const { id } = params;
+    const { id } = await params;
     const client = await pool.connect();
 
     try {

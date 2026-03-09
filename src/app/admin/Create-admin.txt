@@ -1,0 +1,1 @@
+npm run admin:create -- --email admin@manatherapie.com --password "MotDePasseFort123!" --name "Admin"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ import { useCart } from '@/context/CartContext';
 
 // (Ce composant peut être extrait dans son propre fichier si vous le souhaitez)
 const SimilarCourseCard = ({ course }) => (
-    <Link href={`/academie/${course.slug}`} key={course.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow group">
+    <Link href={`/academie/${course.slug}`} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow group">
         <div className="relative h-40 overflow-hidden">
             <Image src={course.image_url || '/images/placeholder.png'} alt={course.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300"/>
         </div>
@@ -21,7 +21,7 @@ const SimilarCourseCard = ({ course }) => (
 );
 
 export default function CourseDetailPage({ params }) {
-    const { slug } = params;
+    const { slug } = use(params);
     const [course, setCourse] = useState(null);
     const [similarCourses, setSimilarCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +68,7 @@ export default function CourseDetailPage({ params }) {
 
     return (
         <main>
-            <section className="relative z-[2] bg-[#1f2937] text-white py-16">
+            <section className="relative z-2 bg-[#1f2937] text-white py-16">
                 <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
                      <Image src={course.image_url} alt={course.title} width={500} height={300} className="w-full rounded-lg object-cover shadow-lg"/>
                     <div className="lg:col-span-2">
@@ -94,7 +94,7 @@ export default function CourseDetailPage({ params }) {
                             <h2 className="text-2xl font-bold mb-4">Ce que vous allez apprendre</h2>
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
                                 {course.what_you_learn.map((item, i) => (
-                                    <li key={i} className="flex items-start gap-3"><Check size={20} className="text-green-500 mt-1 flex-shrink-0"/><span>{item}</span></li>
+                                    <li key={i} className="flex items-start gap-3"><Check size={20} className="text-green-500 mt-1 shrink-0"/><span>{item}</span></li>
                                 ))}
                             </ul>
                         </motion.div>
@@ -114,7 +114,7 @@ export default function CourseDetailPage({ params }) {
                         </div>
                     </div>
                     
-                    <div className="relative z-[2]">
+                    <div className="relative z-2">
                         <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="lg:sticky top-28">
                              <div className="rounded-lg shadow-2xl overflow-hidden border border-gray-200">
                                  <Image src={course.image_url} alt={course.title} width={500} height={300} className="w-full object-cover"/>
@@ -143,8 +143,8 @@ export default function CourseDetailPage({ params }) {
             <section className="py-16 bg-gray-50 border-t border-gray-200">
                  <div className="container mx-auto px-6">
                     <h2 className="text-3xl font-bold mb-8">Formations similaires</h2>
-                     <div className="relative z-[2] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {similarCourses.map(c => <SimilarCourseCard course={c} />)}
+                     <div className="relative z-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {similarCourses.map(c => <SimilarCourseCard key={c.id} course={c} />)}
                      </div>
                  </div>
             </section>

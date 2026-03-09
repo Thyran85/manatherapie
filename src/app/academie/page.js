@@ -32,14 +32,14 @@ export default async function AcademyPage() {
         <main>
             <div className="bg-[#FFF7ED]"></div>
 
-            <section className="relative z-[2] py-24 text-center bg-gray-800 text-white">
+            <section className="relative z-2 py-24 text-center bg-gray-800 text-white">
                 <Image
                     src="/images/hero-academie-bg.jpg"
                     alt="Apprentissage et bien-être"
                     fill
                     className="object-cover opacity-20"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1f2937]/50 to-transparent"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-[#1f2937]/50 to-transparent"></div>
                 <div className="relative container mx-auto px-6">
                     {/* On peut utiliser motion ici car c'est juste pour l'animation d'entrée, pas d'état */}
                     <h1 className="text-4xl md:text-6xl font-bold mb-4">

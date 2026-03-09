@@ -22,7 +22,8 @@ async function verifyTokenAndGetAdminId(tokenValue) {
 // --- FONCTION GET ---
 export async function GET() {
     // Étape 1: Toute la logique de lecture du cookie se passe ICI.
-    const tokenCookie = cookies().get('admin-token');
+    const cookieStore = await cookies();
+    const tokenCookie = cookieStore.get('admin-token');
     const tokenValue = tokenCookie?.value; // On extrait la valeur (string).
 
     // Étape 2: On passe uniquement la valeur à notre fonction de vérification.
@@ -53,7 +54,8 @@ export async function GET() {
 // --- FONCTION PUT ---
 export async function PUT(request) {
     // On répète le même schéma correct.
-    const tokenCookie = cookies().get('admin-token');
+    const cookieStore = await cookies();
+    const tokenCookie = cookieStore.get('admin-token');
     const tokenValue = tokenCookie?.value;
     const adminId = await verifyTokenAndGetAdminId(tokenValue);
 

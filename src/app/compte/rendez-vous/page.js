@@ -154,7 +154,7 @@ const AppointmentDetailModal = ({ event, isOpen, setIsOpen }) => {
 
 const CreateAppointmentModal = ({ slot, isOpen, setIsOpen, services })  => {
     const router = useRouter();
-    const safeServices = Array.isArray(services) ? services : [];
+    const safeServices = useMemo(() => (Array.isArray(services) ? services : []), [services]);
     const [selectedServiceSlug, setSelectedServiceSlug] = useState('');
     const [notes, setNotes] = useState('');
     const [startTime, setStartTime] = useState(new Date());
@@ -169,7 +169,7 @@ const CreateAppointmentModal = ({ slot, isOpen, setIsOpen, services })  => {
                 setSelectedServiceSlug(safeServices[0].slug);
             }
         }
-    }, [slot, isOpen,safeServices]);
+    }, [slot, isOpen, safeServices, selectedServiceSlug]);
 
     const service = safeServices.find(s => s.slug === selectedServiceSlug);
     
@@ -374,9 +374,9 @@ export default function AppointmentsPage() {
     ];
 
     return (
-        <div className="relative z-[2]">
+        <div className="relative z-2">
             <Toaster position="bottom-right" />
-            <div className="relative z-[2]  flex justify-between items-center mb-8">
+            <div className="relative z-2  flex justify-between items-center mb-8">
                 <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-[#1f2937]">
                     Mes Rendez-vous
                 </motion.h1>
@@ -390,7 +390,7 @@ export default function AppointmentsPage() {
                 </div>
             </div>
 
-            <div className="relative z-[2]  mb-6 border-b border-gray-200">
+            <div className="relative z-2  mb-6 border-b border-gray-200">
                 <nav className="-mb-px gap-4 flex space-x-6">
                     {tabs.map(tab => (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -402,7 +402,7 @@ export default function AppointmentsPage() {
             </div>
 
             <div className="mb-6 flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-grow">
+                <div className="relative grow">
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
                     <input type="text" placeholder="Rechercher un soin..." className="w-full pl-10 pr-4 py-2 border rounded-lg" onChange={e => setSearchTerm(e.target.value)} />
                 </div>

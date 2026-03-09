@@ -126,7 +126,7 @@ export default function AdminClientDetailPage() {
                                         </div>
                                         {course.status === 'en attente' && (
                                             <div className="flex justify-end gap-2">
-                                                <button onClick={() => handleUpdateStatus('course', course.purchase_id, 'annulé')} className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200"><X size={16}/></button>
+                                                <button onClick={() => handleUpdateStatus('course', course.purchase_id, 'refusé')} className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200"><X size={16}/></button>
                                                 <button onClick={() => handleUpdateStatus('course', course.purchase_id, 'accepté')} className="p-2 bg-green-100 text-green-600 rounded-md hover:bg-green-200"><Check size={16}/></button>
                                             </div>
                                         )}

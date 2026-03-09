@@ -4,7 +4,8 @@ import { cookies } from 'next/headers';
 export async function POST() {
     try {
         // Supprimer le cookie en le définissant avec une date d'expiration passée
-        cookies().set('token', '', {
+        const cookieStore = await cookies();
+        cookieStore.set('token', '', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             expires: new Date(0), // Date dans le passé

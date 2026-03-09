@@ -50,7 +50,8 @@ export async function POST(request) {
             );
 
             // 5. Stocker le token dans un cookie sécurisé
-            cookies().set('token', token, {
+            const cookieStore = await cookies();
+            cookieStore.set('token', token, {
                 httpOnly: true, // Le cookie n'est pas accessible par le JavaScript côté client
                 secure: process.env.NODE_ENV === 'production', // Uniquement en HTTPS en production
                 maxAge: 60 * 60 * 24, // 1 jour en secondes

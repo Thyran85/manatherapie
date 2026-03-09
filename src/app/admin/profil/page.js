@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Edit, X, AlertTriangle } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation'; // Importer le useRouter
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -137,7 +137,7 @@ export default function AdminProfilePage() {
     
     const router = useRouter(); // Initialiser le router
 
-    const fetchAdminProfile = async () => {
+    const fetchAdminProfile = useCallback(async () => {
         try {
             const response = await fetch('/api/admin/profile');
             
@@ -159,11 +159,11 @@ export default function AdminProfilePage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [router]);
 
     useEffect(() => {
         fetchAdminProfile();
-    }, []); // Se lance une seule fois au chargement
+    }, [fetchAdminProfile]); // Se lance au chargement
 
     if (isLoading) {
         return (

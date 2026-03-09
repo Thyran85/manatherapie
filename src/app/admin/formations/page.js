@@ -1,28 +1,28 @@
 'use client';
 import { PlusCircle, Search, Trash2, Edit, Eye, X } from 'lucide-react';
-import { useState,useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect, useMemo, Fragment, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Dialog, Transition } from '@headlessui/react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
+const INITIAL_FORMATION_STATE = {
+    title: '',
+    type: 'video',
+    category: '',
+    price: '',
+    slug: '',
+    description: '',
+    whatYoullLearn: '',
+    modules: '',
+};
+
 const CreateFormationModal = ({ isOpen, setIsOpen, onFormationCreated, courseToEdit }) => {
     // Déterminer si nous sommes en mode édition en vérifiant si courseToEdit existe
     const isEditMode = Boolean(courseToEdit);
 
-    const initialState = {
-        title: '',
-        type: 'video',
-        category: '',
-        price: '',
-        slug: '',
-        description: '',
-        whatYoullLearn: '',
-        modules: '',
-    };
-
-    const [formData, setFormData] = useState(initialState);
+    const [formData, setFormData] = useState(INITIAL_FORMATION_STATE);
     const [coverImageFile, setCoverImageFile] = useState(null);
     const [courseFile, setCourseFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +45,7 @@ const CreateFormationModal = ({ isOpen, setIsOpen, onFormationCreated, courseToE
                 });
             } else {
                 // S'assurer que le formulaire est vide pour la création
-                setFormData(initialState);
+                setFormData(INITIAL_FORMATION_STATE);
             }
         }
     }, [courseToEdit, isOpen, isEditMode]);
@@ -133,7 +133,7 @@ const CreateFormationModal = ({ isOpen, setIsOpen, onFormationCreated, courseToE
     };
     
     const closeModal = () => {
-        setFormData(initialState);
+        setFormData(INITIAL_FORMATION_STATE);
         setCoverImageFile(null);
         setCourseFile(null);
         setError(null);
@@ -212,7 +212,7 @@ export default function FormationsPage() {
     const [error, setError] = useState(null);
 
     // Fonction pour récupérer les données depuis notre API
-    const fetchCourses = async () => {
+    const fetchCourses = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -222,8 +222,7 @@ export default function FormationsPage() {
                 type: filterType,
                 sortBy: sortBy,
             });
-            // On peut ajouter des filtres ici plus tard en utilisant searchTerm, etc.
-            const response = await fetch(`/api/admin/formations?search=${searchTerm}`);
+            const response = await fetch(`/api/admin/formations?${params.toString()}`);
             if (!response.ok) {
                 throw new Error('Erreur lors de la récupération des données.');
             }
@@ -234,7 +233,7 @@ export default function FormationsPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [searchTerm, filterCategory, filterType, sortBy]);
 
 
 
@@ -247,7 +246,7 @@ export default function FormationsPage() {
         return () => {
             clearTimeout(handler); // Nettoyer le timer
         };
-    }, [searchTerm, filterCategory, filterType, sortBy]); 
+    }, [fetchCourses]); 
 
     const categories = useMemo(() => {
         // Pour éviter de recalculer à chaque rendu, on utilise useMemo

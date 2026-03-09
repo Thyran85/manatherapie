@@ -5,7 +5,7 @@ const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
 
 // Protégé par le middleware /api/admin/*
 export async function GET(request, { params }) {
-    const { id } = params;
+    const { id } = await params;
     const clientDB = await pool.connect();
     try {
         // 1. Récupérer les informations du client

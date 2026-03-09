@@ -34,7 +34,7 @@ export async function GET() {
 
         const queries = [
             // [0] Calcul des Revenus (30j)
-            client.query(
+            pool.query(
                 `SELECT 
                     (
                         -- Revenus des RDV basés sur les paiements réussis
@@ -50,19 +50,19 @@ export async function GET() {
                 [thirtyDaysAgo]
             ),
             // [1] Nouveaux Clients (30j)
-            client.query(
+            pool.query(
                 `SELECT COUNT(*) FROM users WHERE role = 'CLIENT' AND created_at >= $1`, 
                 [thirtyDaysAgo]
             ),
             // [2] Nombre de RDV en attente
-            client.query(`SELECT COUNT(*) FROM appointments WHERE status = 'en attente'`),
+            pool.query(`SELECT COUNT(*) FROM appointments WHERE status = 'en attente'`),
             // [3] Formations vendues (30j)
-            client.query(
+            pool.query(
                 `SELECT COUNT(*) FROM user_courses WHERE purchased_at >= $1`, 
                 [thirtyDaysAgo]
             ),
             // [4] Liste des RDV pour "Actions Rapides" (les 3 plus urgents)
-            client.query(`
+            pool.query(`
                 SELECT a.id, s.title as service, u.name as "clientName", a.start_time as date
                 FROM appointments a
                 JOIN services s ON a."serviceId" = s.id
@@ -72,7 +72,7 @@ export async function GET() {
                 LIMIT 3;
             `),
             // [5] Liste des RDV à venir (les 5 prochains confirmés)
-            client.query(`
+            pool.query(`
                 SELECT a.id, s.title as service, u.name as "clientName", a.start_time as date, a.status
                 FROM appointments a
                 JOIN services s ON a."serviceId" = s.id
@@ -82,7 +82,7 @@ export async function GET() {
                 LIMIT 5;
             `),
             // [6] Activité Récente (les 5 derniers événements)
-            client.query(`
+            pool.query(`
                 SELECT 'new_purchase' as type, c.title as "primaryText", u.name as "secondaryText", uc.purchased_at as timestamp
                 FROM user_courses uc
                 JOIN courses c ON uc."courseId" = c.id
@@ -120,7 +120,9 @@ export async function GET() {
 
     } catch (error) {
         // En cas d'erreur, annuler la transaction si elle était en cours
-        await client.query('ROLLBACK');
+        try {
+            await client.query('ROLLBACK');
+        } catch (_) {}
         console.error("Erreur API GET /admin/dashboard:", error);
         return NextResponse.json({ message: "Erreur interne du serveur." }, { status: 500 });
     } finally {

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { courses } from '@/app/academie/academyData';
-import { PlayCircle, Download, Search, Video, BookOpen, Clock } from 'lucide-react';
+import { PlayCircle, Download, Search, Video, BookOpen, Clock, X } from 'lucide-react';
 
 const purchasedCourses = [
     { ...courses[0], status: 'terminé' }, // Formation déjà validée
@@ -85,15 +85,15 @@ export default function FormationsPage() {
             </motion.h1>
 
             {/* --- Section des formations achetées --- */}
-            <div className="relative z-[2]  bg-white p-6 rounded-2xl shadow-sm">
+            <div className="relative z-2  bg-white p-6 rounded-2xl shadow-sm">
                 <h2 className="text-xl font-bold mb-6">Ma Bibliothèque</h2>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                     <div className="relative flex-grow">
+                     <div className="relative grow">
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
                         <input type="text" placeholder="Rechercher dans mes formations..." className="w-full pl-10 pr-4 py-2 border rounded-lg" onChange={e => setSearchTerm(e.target.value)}/>
                     </div>
-                    <div className="flex-shrink-0 flex gap-1 bg-gray-100 p-1 rounded-lg">
+                    <div className="shrink-0 flex gap-1 bg-gray-100 p-1 rounded-lg">
                         <button onClick={() => setFilterType('all')} className={`px-3 py-1 rounded-md text-sm font-semibold transition ${filterType === 'all' ? 'bg-white shadow-sm text-[#1f2937]' : 'text-gray-600'}`}>Tous</button>
                         <button onClick={() => setFilterType('video')} className={`px-3 py-1 rounded-md text-sm font-semibold transition ${filterType === 'video' ? 'bg-white shadow-sm text-[#1f2937]' : 'text-gray-600'}`}><Video size={16} className="inline mr-1"/> Vidéos</button>
                         <button onClick={() => setFilterType('ebook')} className={`px-3 py-1 rounded-md text-sm font-semibold transition ${filterType === 'ebook' ? 'bg-white shadow-sm text-[#1f2937]' : 'text-gray-600'}`}><BookOpen size={16} className="inline mr-1"/> Ebooks</button>
@@ -103,14 +103,14 @@ export default function FormationsPage() {
                 <div className="space-y-4">
                     {filteredPurchased.length > 0 ? filteredPurchased.map(course => (
                         <div key={course.id} className={`p-4 rounded-lg flex flex-col sm:flex-row items-center gap-4 transition-colors ${course.status === 'en attente' ? 'bg-amber-50' : (course.status === 'refusé' ? 'bg-red-50' : 'bg-gray-50')}`}>
-                            <div className="relative h-16 w-full sm:w-28 rounded-md overflow-hidden flex-shrink-0">
+                            <div className="relative h-16 w-full sm:w-28 rounded-md overflow-hidden shrink-0">
                                 <Image src={course.image_url || '/images/placeholder.png'} alt={course.title} fill className="object-cover"/>
                             </div>
-                            <div className="flex-grow text-center sm:text-left">
+                            <div className="grow text-center sm:text-left">
                                 <h3 className="font-bold">{course.title}</h3>
                                 <p className="text-sm text-gray-500">{course.category}</p>
                             </div>
-                            <div className="flex items-center justify-center gap-2 flex-shrink-0">
+                            <div className="flex items-center justify-center gap-2 shrink-0">
                                 {course.status === 'accepté' ? (
                                     <>
                                         {course.type === 'video' ? (
