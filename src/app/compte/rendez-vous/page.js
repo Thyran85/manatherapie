@@ -219,7 +219,7 @@ const CreateAppointmentModal = ({ slot, isOpen, setIsOpen, services })  => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="font-semibold text-sm">Type de soin</label>
+                                    <label className="font-semibold text-sm">Type de rendez-vous</label>
                                     <select value={selectedServiceSlug} onChange={(e) => setSelectedServiceSlug(e.target.value)} required className="w-full mt-1 p-3 border rounded-lg">
                                         {safeServices.map(s => <option key={s.slug} value={s.slug}>{s.title}</option>)}
                                     </select>

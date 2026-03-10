@@ -35,8 +35,8 @@ const RegisterPage = () => {
                 throw new Error(data.message || 'Une erreur est survenue.');
             }
 
-            // Rediriger vers la page de connexion après une inscription réussie
-            router.push('/auth/login?status=success'); // On peut ajouter un paramètre pour afficher un message
+            // Rediriger vers la page de vérification email
+            router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
 
         } catch (err) {
             setError(err.message);

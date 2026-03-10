@@ -58,6 +58,13 @@ export async function middleware(req) {
             }
             return NextResponse.redirect(url);
         }
+
+        // Rediriger les utilisateurs Google sans mot de passe vers la page de définition
+        if (sessionToken.needsPassword && pathname !== '/auth/set-password') {
+            const url = req.nextUrl.clone();
+            url.pathname = '/auth/set-password';
+            return NextResponse.redirect(url);
+        }
     }
 
     return NextResponse.next();

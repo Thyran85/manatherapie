@@ -17,8 +17,8 @@ export const authOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       httpOptions: {
-    timeout: 10000, // Augmente le délai d'attente à 10 secondes
-  },
+        timeout: 10000,
+      },
     }),
     CredentialsProvider({
       name: 'Credentials',
@@ -37,8 +37,13 @@ export const authOptions = {
           const user = result.rows[0];
 
           if (!user || !user.password_hash) {
-            // L'utilisateur n'existe pas ou s'est inscrit via Google
+            // L'utilisateur n'existe pas ou s'est inscrit via Google (sans mot de passe)
             throw new Error("Utilisateur non trouvé ou mot de passe non défini.");
+          }
+
+          // Vérification de l'email obligatoire avant connexion
+          if (!user.email_verified) {
+            throw new Error("EMAIL_NOT_VERIFIED");
           }
 
           const isValid = await bcrypt.compare(credentials.password, user.password_hash);
@@ -47,11 +52,11 @@ export const authOptions = {
             throw new Error("Mot de passe incorrect.");
           }
           
-          return user; // Succès
+          return user;
 
         } catch (e) {
           console.error("Authorize error:", e.message);
-          return null; // Important: retourner null en cas d'erreur
+          throw e; // On relance l'erreur pour qu'elle soit accessible côté client
         } finally {
           client.release();
         }
@@ -60,7 +65,7 @@ export const authOptions = {
   ],
 
   session: {
-    strategy: "jwt", // JWT est plus flexible que "database"
+    strategy: "jwt",
   },
 
   pages: {
@@ -69,17 +74,73 @@ export const authOptions = {
   },
 
   callbacks: {
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id;
+    async signIn({ user, account }) {
+      // Pour les connexions Google : on s'assure que email_verified est TRUE dans la DB
+      // (NextAuth via l'adapter créera l'utilisateur s'il n'existe pas)
+      if (account?.provider === 'google') {
+        try {
+          const client = await pool.connect();
+          try {
+            await client.query(
+              'UPDATE users SET email_verified = TRUE WHERE email = $1',
+              [user.email]
+            );
+          } finally {
+            client.release();
+          }
+        } catch (e) {
+          console.error("Erreur mise à jour email_verified Google:", e.message);
+        }
       }
-      return session;
+      return true;
     },
-    async jwt({ token, user, account, profile }) {
+
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
       }
+
+      // Detect si c'est une connexion Google et que le user n'a pas de password_hash
+      if (account?.provider === 'google') {
+        try {
+          const client = await pool.connect();
+          try {
+            const result = await client.query('SELECT password_hash FROM users WHERE email = $1', [token.email]);
+            const dbUser = result.rows[0];
+            token.needsPassword = !dbUser?.password_hash;
+          } finally {
+            client.release();
+          }
+        } catch (e) {
+          console.error("Erreur vérification password_hash:", e.message);
+          token.needsPassword = false;
+        }
+      }
+
+      // Permettre de réinitialiser needsPassword après que le user a défini son mot de passe
+      if (account === null && token.needsPassword) {
+        try {
+          const client = await pool.connect();
+          try {
+            const result = await client.query('SELECT password_hash FROM users WHERE email = $1', [token.email]);
+            token.needsPassword = !result.rows[0]?.password_hash;
+          } finally {
+            client.release();
+          }
+        } catch (e) {
+          console.error("Erreur refresh needsPassword:", e.message);
+        }
+      }
+
       return token;
+    },
+
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id;
+        session.user.needsPassword = token.needsPassword ?? false;
+      }
+      return session;
     },
   },
 

@@ -233,6 +233,34 @@ export async function sendCourseStatusEmail({ to, clientName, courseTitle, statu
     }
 }
 
+export async function sendVerificationEmail({ to, code }) {
+    const mailOptions = {
+        from: process.env.EMAIL_FROM,
+        to,
+        subject: 'Vérifiez votre adresse email — Manatherapie',
+        html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 480px; margin: 0 auto;">
+                <h2 style="color: #1f2937;">Vérification de votre email</h2>
+                <p>Bonjour,</p>
+                <p>Merci de vous être inscrit sur <strong>Manatherapie</strong>. Pour activer votre compte, veuillez saisir le code ci-dessous sur la page de vérification :</p>
+                <div style="text-align: center; margin: 32px 0;">
+                    <span style="font-size: 36px; font-weight: bold; letter-spacing: 10px; color: #C87A5E; background: #fdf5f2; padding: 16px 24px; border-radius: 10px; border: 2px dashed #C87A5E;">${code}</span>
+                </div>
+                <p style="color: #6b7280; font-size: 14px;">Ce code est valable pendant <strong>15 minutes</strong>. Si vous n'avez pas créé de compte, vous pouvez ignorer cet email.</p>
+                <p>Cordialement,<br/>L'équipe Manatherapie</p>
+            </div>
+        `,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Email de vérification envoyé à:', to);
+    } catch (error) {
+        console.error("Échec de l'envoi de l'email de vérification:", error);
+        throw new Error("Impossible d'envoyer l'email de vérification.");
+    }
+}
+
 export async function sendAdminClientNotificationEmail({ to, clientName, message }) {
     const mailOptions = {
         from: process.env.EMAIL_FROM,
