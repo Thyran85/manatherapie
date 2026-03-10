@@ -3,7 +3,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 
 const seeded = (seed) => {
@@ -53,6 +53,12 @@ const FloatingParticle = ({ index }) => {
 
 
 const CTASection = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <section className="relative z-[20] py-24 bg-[#1f2937] overflow-hidden">
       <Image
@@ -62,9 +68,11 @@ const CTASection = () => {
         className="opacity-20 object-cover" 
       />
 
-      <div className="absolute inset-0">
-        {[...Array(30)].map((_, i) => <FloatingParticle key={i} index={i} />)}
-      </div>
+      {isMounted && (
+        <div className="absolute inset-0">
+          {[...Array(30)].map((_, i) => <FloatingParticle key={i} index={i} />)}
+        </div>
+      )}
 
       <div 
         className="absolute inset-0"

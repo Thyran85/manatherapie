@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 const CartContext = createContext();
 
@@ -8,29 +9,51 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
+    const [isCartReady, setIsCartReady] = useState(false);
+    const { data: session, status } = useSession();
+    const userStorageKey = session?.user?.id ? `manatherapy_cart_user_${session.user.id}` : 'manatherapy_cart_guest';
 
-    // Au chargement initial, essayer de récupérer le panier depuis le localStorage
+    // Charger le panier lié à l'utilisateur courant (ou guest)
     useEffect(() => {
+        if (status === 'loading') return;
+
         try {
-            const localData = localStorage.getItem('manatherapy_cart');
+            let localData = localStorage.getItem(userStorageKey);
+
+            // Migration douce de l'ancienne clé globale vers la clé guest
+            if (!localData && userStorageKey === 'manatherapy_cart_guest') {
+                const legacyData = localStorage.getItem('manatherapy_cart');
+                if (legacyData) {
+                    localStorage.setItem(userStorageKey, legacyData);
+                    localStorage.removeItem('manatherapy_cart');
+                    localData = legacyData;
+                }
+            }
+
             if (localData) {
                 setCartItems(JSON.parse(localData));
+            } else {
+                setCartItems([]);
             }
         } catch (error) {
             console.error("Erreur de lecture du localStorage pour le panier:", error);
             // Si les données sont corrompues, on nettoie
-            localStorage.removeItem('manatherapy_cart');
+            localStorage.removeItem(userStorageKey);
+            setCartItems([]);
+        } finally {
+            setIsCartReady(true);
         }
-    }, []);
+    }, [status, userStorageKey]);
 
     // Chaque fois que le panier change, le sauvegarder dans le localStorage
     useEffect(() => {
+        if (!isCartReady || status === 'loading') return;
         try {
-            localStorage.setItem('manatherapy_cart', JSON.stringify(cartItems));
+            localStorage.setItem(userStorageKey, JSON.stringify(cartItems));
         } catch (error) {
             console.error("Erreur d'écriture dans le localStorage pour le panier:", error);
         }
-    }, [cartItems]);
+    }, [cartItems, userStorageKey, isCartReady, status]);
 
     const addToCart = (course) => {
         setCartItems(prevItems => {

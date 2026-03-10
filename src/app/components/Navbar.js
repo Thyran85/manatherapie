@@ -51,6 +51,7 @@ const Navbar = () => {
 
   const isAuthenticated = status === 'authenticated';
     const cartItemCount = cartItems.length;
+    const cartHref = isAuthenticated ? '/compte/panier' : '/panier';
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -167,7 +168,7 @@ const Navbar = () => {
                     
                     {/* --- MODIFICATION 2 : Badge du panier dynamique --- */}
                     <Link 
-                        href="/panier" 
+                        href={cartHref} 
                         className={`relative transition-colors duration-300 ${isScrolled ? 'text-gray-600 hover:text-[#af4d30]' : 'text-white hover:text-white/80'}`}
                         aria-label={`Panier contenant ${cartItemCount} article(s)`}
                     >

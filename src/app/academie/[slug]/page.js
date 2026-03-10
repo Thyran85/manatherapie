@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Star, Check, Video, BookOpen, BarChart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useSession } from 'next-auth/react';
 
 // (Ce composant peut être extrait dans son propre fichier si vous le souhaitez)
 const SimilarCourseCard = ({ course }) => (
@@ -27,6 +28,7 @@ export default function CourseDetailPage({ params }) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const { addToCart } = useCart();
+    const { data: session } = useSession();
 
     useEffect(() => {
         const fetchCourseData = async () => {
@@ -63,7 +65,7 @@ export default function CourseDetailPage({ params }) {
         // Pour l'instant, on redirige vers le panier avec le cours déjà ajouté.
         // On pourrait plus tard créer une page de checkout direct.
         addToCart(course);
-        window.location.href = '/panier';
+        window.location.href = session ? '/compte/panier' : '/panier';
     };
 
     return (
