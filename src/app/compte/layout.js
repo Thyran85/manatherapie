@@ -122,10 +122,10 @@ export default function AccountLayout({ children }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className="relative z-[2]  bg-gray-50 min-h-screen">
+        <div className="relative z-2  bg-gray-50 min-h-screen">
             <div className="flex">
                 {/* --- Barre latérale pour grands écrans, maintenant STICKY --- */}
-                <aside className="w-64 flex-shrink-0 hidden lg:block sticky top-0 h-screen">
+                <aside className="w-64 shrink-0 hidden lg:block sticky top-0 h-screen">
                     <SideNav />
                 </aside>
                 
@@ -158,7 +158,7 @@ export default function AccountLayout({ children }) {
                 </AnimatePresence>
 
                 {/* --- Contenu Principal --- */}
-                <main className="flex-1 p-6 lg:p-10">
+                <main className="flex-1 p-4 sm:p-6 lg:p-10 pt-16 sm:pt-6">
                     {children}
                 </main>
             </div>
