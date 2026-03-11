@@ -56,7 +56,7 @@ export default function AdminClientsPage() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm min-w-0 overflow-hidden">
                     {/* Barre de recherche et filtres */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div className="relative md:col-span-2">
@@ -91,7 +91,48 @@ export default function AdminClientsPage() {
                     ) : clients.length === 0 ? (
                         <div className="text-center text-gray-500 py-10">Aucun client trouvé pour ces critères.</div>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <>
+                        {/* Mobile cards */}
+                        <div className="space-y-3 md:hidden">
+                            {clients.map(client => (
+                                <div key={client.id} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                                    <Link href={`/admin/clients/${client.id}`} className="block hover:text-[#af4d30]">
+                                        <p className="font-bold text-gray-800">{client.name}</p>
+                                        <p className="text-sm text-gray-500">{client.email}</p>
+                                    </Link>
+                                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                                        <div className="space-y-1">
+                                            <p className="text-xs uppercase text-gray-400">Formations</p>
+                                            <div className="flex items-center gap-2">
+                                                <BookOpen size={14} className="text-green-600"/>
+                                                <span>{client.accepted_courses} <span className="text-gray-500">acceptée(s)</span></span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                <Clock size={12} className="text-amber-600"/>
+                                                <span>{client.pending_courses} <span className="text-gray-500">en attente</span></span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-xs uppercase text-gray-400">Rendez-vous</p>
+                                            <div className="flex items-center gap-2">
+                                                <Calendar size={14} className="text-green-600"/>
+                                                <span>{client.confirmed_appointments} <span className="text-gray-500">confirmé(s)</span></span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                <Clock size={12} className="text-amber-600"/>
+                                                <span>{client.pending_appointments} <span className="text-gray-500">en attente</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="mt-3 text-xs text-gray-500">
+                                        Inscrit le {new Date(client.created_at).toLocaleDateString('fr-FR')}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop table */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="border-b text-gray-500">
                                     <tr>
@@ -138,6 +179,7 @@ export default function AdminClientsPage() {
                                 </tbody>
                             </table>
                         </div>
+                        </>
                     )}
                 </div>
             </motion.div>

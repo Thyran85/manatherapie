@@ -147,15 +147,15 @@ const CreateFormationModal = ({ isOpen, setIsOpen, onFormationCreated, courseToE
                 <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
                 <div className="fixed inset-0 overflow-y-auto">
                     <div className="flex min-h-full items-center justify-center p-4">
-                        <Dialog.Panel className="w-full max-w-3xl transform rounded-2xl bg-white p-8 text-left align-middle shadow-xl transition-all">
+                        <Dialog.Panel className="w-full max-w-3xl transform rounded-2xl bg-white p-5 sm:p-8 text-left align-middle shadow-xl transition-all">
                             <Dialog.Title as="h3" className="text-2xl font-bold leading-6 text-[#1f2937] flex justify-between items-center">
                                 {isEditMode ? 'Modifier la formation' : 'Créer une nouvelle formation'}
                                 <button onClick={closeModal}><X/></button>
                             </Dialog.Title>
                             
-                            <form onSubmit={handleSubmit} className="mt-6 space-y-4 max-h-[70vh] overflow-y-auto pr-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" name="title" placeholder="Titre de la formation" value={formData.title} onChange={handleChange} required className="w-full p-3 border rounded-lg col-span-2"/>
+                            <form onSubmit={handleSubmit} className="mt-6 space-y-4 max-h-[70vh] overflow-y-auto pr-2 sm:pr-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <input type="text" name="title" placeholder="Titre de la formation" value={formData.title} onChange={handleChange} required className="w-full p-3 border rounded-lg sm:col-span-2"/>
                                     <select name="type" value={formData.type} onChange={handleChange} className="w-full p-3 border rounded-lg">
                                         <option value="video">Vidéo</option>
                                         <option value="ebook">Ebook</option>
@@ -328,16 +328,16 @@ export default function FormationsPage() {
     };
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Gestion des Formations</h1>
-                <button className="flex items-center gap-2 bg-[#af4d30] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-opacity-90 cusror-pointer" onClick={handleCreate} >
+        <div className="min-w-0 w-full overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+                <h1 className="text-2xl sm:text-3xl font-bold">Gestion des Formations</h1>
+                <button className="flex items-center justify-center gap-2 bg-[#af4d30] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-opacity-90 cusror-pointer w-full sm:w-auto" onClick={handleCreate} >
                     <PlusCircle size={20}/>
                     <span>Créer une formation</span>
                 </button>
             </div>
             
-           <div className="bg-white p-6 rounded-2xl shadow-sm">
+           <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm min-w-0 overflow-hidden">
                <div className="flex flex-col md:flex-row gap-4 mb-6">
     {/* Barre de recherche (prendra plus de place) */}
     <div className="relative flex-grow">
@@ -377,50 +377,110 @@ export default function FormationsPage() {
                 {error && <p className="text-red-500">Erreur: {error}</p>}
 
                 <div className="space-y-3">
-                    {!isLoading && !error && courses.map(course => (
-                        <motion.div 
-                            key={course.id} 
-                            layout
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="grid grid-cols-6 items-center p-3 bg-gray-50 rounded-lg"
-                        >
-                            <div className="col-span-3 flex items-center gap-4">
-                                {/* Mettez une image par défaut si course.image_url est null */}
-                                <div className="relative w-20 h-14 rounded-md overflow-hidden bg-gray-200">
-                                  <Image src={course.image_url || '/images/placeholder.png'} alt={course.title} fill className="object-cover"/>
-                                </div>
-                                <div>
-                                    <p className="font-bold">{course.title}</p>
-                                    <p className="text-sm text-gray-500">{course.category}</p>
-                                </div>
+                    {!isLoading && !error && (
+                        <>
+                            {/* Mobile cards */}
+                            <div className="space-y-3 md:hidden">
+                                {courses.map(course => (
+                                    <motion.div
+                                        key={course.id}
+                                        layout
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="bg-gray-50 rounded-xl p-4"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative w-16 h-12 rounded-md overflow-hidden bg-gray-200 shrink-0">
+                                                <Image src={course.image_url || '/images/placeholder.png'} alt={course.title} fill className="object-cover"/>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="font-bold truncate">{course.title}</p>
+                                                <p className="text-sm text-gray-500 truncate">{course.category}</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-xs uppercase text-gray-400">Prix</p>
+                                                <p className="text-gray-700 font-semibold">{course.price}€</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs uppercase text-gray-400">Clients</p>
+                                                <p className="text-gray-700"><strong>{course.total_buyers}</strong> clients</p>
+                                                {course.pending_buyers > 0 && (
+                                                    <p className="text-xs text-amber-600">{course.pending_buyers} en attente</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex justify-end gap-2">
+                                            <Link href={`/admin/formations/${course.slug}`} className="p-2 text-gray-500 hover:bg-gray-200 rounded-md" title="Voir les détails et les acheteurs">
+                                                <Eye size={18}/>
+                                            </Link>
+                                            <button className="p-2 text-gray-500 hover:bg-gray-200 rounded-md" title="Éditer" onClick={() => handleEdit(course)} >
+                                                <Edit size={18}/>
+                                            </button>
+                                            <button
+                                                className={`p-2 rounded-md ${course.total_buyers > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-100'}`}
+                                                disabled={course.total_buyers > 0}
+                                                onClick={() => handleDelete(course.id, course.title, course.total_buyers)}
+                                                title={course.total_buyers > 0 ? "Impossible de supprimer" : "Supprimer"}
+                                            >
+                                                <Trash2 size={18}/>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
                             </div>
-                            <p className="text-gray-600">{course.price}€</p>
-                            <div>
-                                <p className="text-gray-600"><strong>{course.total_buyers}</strong> clients</p>
-                                {course.pending_buyers > 0 && 
-                                    <p className="text-xs text-amber-600">{course.pending_buyers} en attente</p>
-                                }
+
+                            {/* Desktop rows */}
+                            <div className="hidden md:block">
+                                {courses.map(course => (
+                                    <motion.div 
+                                        key={course.id} 
+                                        layout
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="grid grid-cols-6 items-center p-3 bg-gray-50 rounded-lg"
+                                    >
+                                        <div className="col-span-3 flex items-center gap-4">
+                                            {/* Mettez une image par défaut si course.image_url est null */}
+                                            <div className="relative w-20 h-14 rounded-md overflow-hidden bg-gray-200">
+                                              <Image src={course.image_url || '/images/placeholder.png'} alt={course.title} fill className="object-cover"/>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold">{course.title}</p>
+                                                <p className="text-sm text-gray-500">{course.category}</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-gray-600">{course.price}€</p>
+                                        <div>
+                                            <p className="text-gray-600"><strong>{course.total_buyers}</strong> clients</p>
+                                            {course.pending_buyers > 0 && 
+                                                <p className="text-xs text-amber-600">{course.pending_buyers} en attente</p>
+                                            }
+                                        </div>
+                                        <div className="flex justify-end gap-2">
+                                            <Link href={`/admin/formations/${course.slug}`} className="p-2 text-gray-500 hover:bg-gray-200 rounded-md" title="Voir les détails et les acheteurs">
+                                                <Eye size={18}/>
+                                            </Link>
+                                            <button className="p-2 text-gray-500 hover:bg-gray-200 rounded-md" title="Éditer" onClick={() => handleEdit(course)} >
+                                                <Edit size={18}/>
+                                            </button>
+                                            <button 
+                                                className={`p-2 rounded-md ${course.total_buyers > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-100'}`} 
+                                                disabled={course.total_buyers > 0}
+                                                onClick={() => handleDelete(course.id, course.title, course.total_buyers)} 
+                                                title={course.total_buyers > 0 ? "Impossible de supprimer" : "Supprimer"}
+                                            >
+                                                <Trash2 size={18}/>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
                             </div>
-                            <div className="flex justify-end gap-2">
-                                <Link href={`/admin/formations/${course.slug}`} className="p-2 text-gray-500 hover:bg-gray-200 rounded-md" title="Voir les détails et les acheteurs">
-                                    <Eye size={18}/>
-                                </Link>
-                                <button className="p-2 text-gray-500 hover:bg-gray-200 rounded-md" title="Éditer" onClick={() => handleEdit(course)} >
-                                    <Edit size={18}/>
-                                </button>
-                                <button 
-                                    className={`p-2 rounded-md ${course.total_buyers > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-100'}`} 
-                                    disabled={course.total_buyers > 0}
-                                    onClick={() => handleDelete(course.id, course.title, course.total_buyers)} 
-                                    title={course.total_buyers > 0 ? "Impossible de supprimer" : "Supprimer"}
-                                >
-                                    <Trash2 size={18}/>
-                                </button>
-                            </div>
-                        </motion.div>
-                    ))}
+                        </>
+                    )}
                      {!isLoading && courses.length === 0 && (
                         <p className="text-center text-gray-500 py-8">Aucune formation trouvée.</p>
                     )}
