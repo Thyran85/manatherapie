@@ -31,21 +31,21 @@ export default function DashboardPage() {
     const { userName, nextAppointment, coursesCount, recentActivity, recentInvoices } = data;
 
     return (
-        <div>
-             <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-[#1f2937] mb-8">
+        <div className="min-w-0 w-full overflow-hidden">
+             <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl sm:text-3xl font-bold text-[#1f2937] mb-6 sm:mb-8">
                 Bonjour, {userName}!
             </motion.h1>
 
             <div className="relative z-[2]  grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* --- Carte Prochain Rendez-vous --- */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-2xl shadow-sm">
                     <h2 className="font-bold text-xl mb-4">Votre prochain rendez-vous</h2>
                     {nextAppointment ? (
-                        <div className="bg-gray-50 p-4 rounded-lg flex items-center gap-6">
-                            <div className="bg-[#af4d30] text-white p-4 rounded-lg"><Calendar size={28}/></div>
+                        <div className="bg-gray-50 p-4 rounded-lg flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                            <div className="bg-[#af4d30] text-white p-3 sm:p-4 rounded-lg w-fit"><Calendar size={24}/></div>
                             <div>
                                 <p className="font-bold text-lg">{nextAppointment.title}</p>
-                                <p className="text-gray-600 flex items-center gap-2">
+                                <p className="text-gray-600 flex items-center gap-2 text-sm sm:text-base">
                                     <Clock size={16}/> {moment(nextAppointment.start_time).format('dddd D MMMM [à] HH:mm')}
                                 </p>
                                 {nextAppointment.meet_link && <p className="text-sm text-blue-500 mt-1">Lien de la session disponible</p>}
@@ -62,10 +62,10 @@ export default function DashboardPage() {
                 </motion.div>
 
                 {/* --- Carte Statistique Formations --- */}
-                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-2xl shadow-sm">
+                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm">
                     <h2 className="font-bold text-xl mb-4">Vos Formations</h2>
                      <div className="text-center">
-                        <p className="text-6xl font-extrabold text-[#af4d30]">{coursesCount}</p>
+                        <p className="text-5xl sm:text-6xl font-extrabold text-[#af4d30]">{coursesCount}</p>
                         <p className="text-gray-600">Formations acquises</p>
                     </div>
                     <Link href="/compte/formations" className="mt-4 block text-center font-semibold text-[#af4d30] hover:underline">
@@ -74,12 +74,12 @@ export default function DashboardPage() {
                 </motion.div>
             </div>
 
-              <div className="mt-12 bg-white p-6 rounded-2xl shadow-sm">
+              <div className="mt-10 sm:mt-12 bg-white p-4 sm:p-6 rounded-2xl shadow-sm">
                 <h2 className="font-bold text-xl mb-4">Ma dernière activité</h2>
                 {recentActivity && recentActivity.length > 0 ? (
                     <ul className="divide-y divide-gray-100">
                         {recentActivity.map((activity, index) => (
-                            <li key={index} className="py-3 flex justify-between items-center">
+                            <li key={index} className="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                                 <p className="text-gray-800">{activity.message}</p>
                                 <span className="text-sm text-gray-500">{moment(activity.created_at).fromNow()}</span>
                             </li>
@@ -93,12 +93,12 @@ export default function DashboardPage() {
                 </Link>
             </div>
 
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white mt-8 p-6 rounded-2xl shadow-sm">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white mt-8 p-4 sm:p-6 rounded-2xl shadow-sm">
                 <h2 className="font-bold text-xl mb-4">Mes Factures Récentes</h2>
                 {recentInvoices && recentInvoices.length > 0 ? (
                     <div className="space-y-2 text-sm">
                         {recentInvoices.map((invoice, index) => (
-                            <a href="#" key={index} className="flex justify-between items-center text-gray-600 hover:text-[#af4d30]">
+                            <a href="#" key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-gray-600 hover:text-[#af4d30]">
                                 <span>Facture du {moment(invoice.created_at).format('D MMM YYYY')} - {Number(invoice.amount).toFixed(2)}€</span>
                                 <span>Télécharger</span>
                             </a>
@@ -114,11 +114,11 @@ export default function DashboardPage() {
             <div className="mt-8">
                  <h2 className="font-bold text-xl mb-4">Accès rapide</h2>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <Link href="/compte/rendez-vous" className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow">
+                     <Link href="/compte/rendez-vous" className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow">
                         <h3 className="font-bold text-lg">Prendre un nouveau rendez-vous</h3>
                         <p className="text-gray-500 text-sm">Consultez les disponibilités et réservez votre prochain soin ou coaching.</p>
                      </Link>
-                     <Link href="/academie" className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow">
+                     <Link href="/academie" className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow">
                          <h3 className="font-bold text-lg">Découvrir de nouvelles formations</h3>
                          <p className="text-gray-500 text-sm">Explorez le catalogue complet de l'académie pour continuer à vous former.</p>
                      </Link>

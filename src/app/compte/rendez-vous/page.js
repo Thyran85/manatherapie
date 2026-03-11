@@ -22,6 +22,106 @@ const localizer = momentLocalizer(moment);
 
 const messages = { today: "Aujourd'hui", previous: '‹', next: '›', month: 'Mois', week: 'Semaine', day: 'Jour', agenda: 'Agenda', noEventsInRange: 'Aucun rendez-vous.' };
 
+// Styles responsive pour le calendrier (même esprit que l'admin)
+const CALENDAR_STYLES = `
+    .client-calendar {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .client-calendar .rbc-toolbar {
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+    .client-calendar .rbc-btn-group button {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+
+    @media (max-width: 639px) {
+        .client-calendar .rbc-toolbar {
+            font-size: 0.7rem;
+            gap: 4px;
+        }
+        .client-calendar .rbc-toolbar-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-align: center;
+            flex: 1 1 100%;
+            order: -1;
+        }
+        .client-calendar .rbc-btn-group button {
+            padding: 3px 5px;
+            font-size: 0.65rem;
+        }
+
+        .client-calendar .rbc-time-view {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            box-sizing: border-box;
+        }
+        .client-calendar .rbc-time-header,
+        .client-calendar .rbc-time-header-content,
+        .client-calendar .rbc-time-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+        .client-calendar .rbc-time-gutter {
+            min-width: 26px !important;
+            width: 26px !important;
+            max-width: 26px !important;
+            flex-shrink: 0;
+        }
+        .client-calendar .rbc-label {
+            font-size: 0.52rem !important;
+            padding: 0 1px !important;
+            white-space: nowrap;
+        }
+        .client-calendar .rbc-header {
+            font-size: 0.55rem !important;
+            padding: 2px 1px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .client-calendar .rbc-timeslot-group {
+            min-height: 28px;
+        }
+        .client-calendar .rbc-time-slot {
+            min-height: 14px;
+        }
+        .client-calendar .rbc-event {
+            font-size: 0.52rem !important;
+            padding: 1px 2px !important;
+            min-height: 12px;
+            line-height: 1.1;
+        }
+        .client-calendar .rbc-event-label {
+            display: none !important;
+        }
+        .client-calendar .rbc-event-content {
+            font-size: 0.52rem;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .client-calendar .rbc-month-view {
+            width: 100% !important;
+        }
+        .client-calendar .rbc-date-cell {
+            font-size: 0.6rem;
+            padding: 2px 3px;
+        }
+        .client-calendar .rbc-show-more {
+            font-size: 0.58rem;
+        }
+    }
+`;
+
 
 
 const LoadingSpinner = () => (
@@ -257,7 +357,7 @@ const fetcher = url => fetch(url).then(res => {
 });
 const AppointmentCard = ({ event, onSelect }) => (
     
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-4 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:shadow-md transition-shadow">
         <div className="flex items-center gap-4">
             <div className={`w-2.5 h-16 rounded-full ${eventStyleGetter(event).style.backgroundColor}`}></div>
             <div>
@@ -272,8 +372,7 @@ const AppointmentCard = ({ event, onSelect }) => (
                 <p className="text-sm text-gray-500 flex items-center gap-2"><Clock size={14}/> {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}</p>
             </div>
         </div>
-        <div className="flex items-center gap-3">
-            
+        <div className="flex items-center justify-end gap-3">
             <button onClick={() => onSelect(event)} className="text-sm font-semibold text-[#af4d30] hover:underline">Détails</button>
         </div>
     </motion.div>
@@ -293,7 +392,19 @@ export default function AppointmentsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
 
-    const [calendarView, setCalendarView] = useState('week'); 
+    const [calendarView, setCalendarView] = useState(
+        typeof window !== 'undefined' && window.innerWidth < 640 ? 'month' : 'week'
+    );
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 640) {
+                setCalendarView(prev => (prev === 'week' || prev === 'day') ? 'month' : prev);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (allEvents && allEvents.error === 'Unauthorized') {
@@ -374,16 +485,17 @@ export default function AppointmentsPage() {
     ];
 
     return (
-        <div className="relative z-2">
+        <div className="relative z-2 min-w-0 w-full overflow-hidden">
+            <style>{CALENDAR_STYLES}</style>
             <Toaster position="bottom-right" />
-            <div className="relative z-2  flex justify-between items-center mb-8">
-                <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-[#1f2937]">
+            <div className="relative z-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+                <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl sm:text-3xl font-bold text-[#1f2937]">
                     Mes Rendez-vous
                 </motion.h1>
                 <div className="flex items-center gap-4">
                     {/* Switch de vue */}
                     
-                    <motion.button onClick={handleNewAppointment} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 bg-[#af4d30] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-opacity-90">
+                    <motion.button onClick={handleNewAppointment} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2 bg-[#af4d30] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-opacity-90 w-full sm:w-auto">
                         <PlusCircle size={20}/>
                         <span>Nouveau RDV</span>
                     </motion.button>
@@ -391,10 +503,10 @@ export default function AppointmentsPage() {
             </div>
 
             <div className="relative z-2  mb-6 border-b border-gray-200">
-                <nav className="-mb-px gap-4 flex space-x-6">
+                <nav className="-mb-px flex gap-4 overflow-x-auto whitespace-nowrap pb-1">
                     {tabs.map(tab => (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 py-3 px-1 border-b-2 font-semibold ${activeTab === tab.id ? 'border-[#af4d30] text-[#af4d30]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
+                            className={`flex items-center gap-2 py-3 px-1 border-b-2 font-semibold shrink-0 ${activeTab === tab.id ? 'border-[#af4d30] text-[#af4d30]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
                             {tab.icon} {tab.name}
                         </button>
                     ))}
@@ -406,8 +518,8 @@ export default function AppointmentsPage() {
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
                     <input type="text" placeholder="Rechercher un soin..." className="w-full pl-10 pr-4 py-2 border rounded-lg" onChange={e => setSearchTerm(e.target.value)} />
                 </div>
-                <input type="date" className="p-2 border rounded-lg" value={moment(currentDate).format('YYYY-MM-DD')} onChange={e => setCurrentDate(new Date(e.target.value))}/>
-                <select className="p-2 border rounded-lg" onChange={e => setStatusFilter(e.target.value)}>
+                <input type="date" className="p-2 border rounded-lg w-full sm:w-auto" value={moment(currentDate).format('YYYY-MM-DD')} onChange={e => setCurrentDate(new Date(e.target.value))}/>
+                <select className="p-2 border rounded-lg w-full sm:w-auto" onChange={e => setStatusFilter(e.target.value)}>
                     <option value="all">Tous les statuts</option>
                     <option value="confirmé">Confirmé</option>
                     <option value="à venir">À venir</option>
@@ -417,14 +529,15 @@ export default function AppointmentsPage() {
             
             <AnimatePresence mode="wait">
                 {viewMode === 'calendar' ? (
-                    <motion.div key="calendar" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white p-6 rounded-2xl shadow-sm">
+                    <motion.div key="calendar" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm min-w-0 overflow-hidden">
                         {activeTab === 'calendar' && (
-                        <div className="bg-white p-2 sm:p-4 rounded-2xl shadow-sm">
+                        <div className="bg-white p-2 sm:p-4 rounded-2xl shadow-sm min-w-0 overflow-hidden">
                         <BigCalendar
+                            className="client-calendar"
                             localizer={localizer}
                             events={formattedEvents}
                             date={currentDate} onNavigate={date => setCurrentDate(date)}
-                            style={{ height: 600 }}
+                            style={{ height: typeof window !== 'undefined' && window.innerWidth < 640 ? 480 : 600 }}
                             messages={messages}
                             eventPropGetter={eventStyleGetter}
                             onSelectEvent={handleEventSelect}
@@ -473,7 +586,7 @@ export default function AppointmentsPage() {
                     <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                         {filteredEvents.length > 0 ? filteredEvents.map(event => (
                             // --- VUE LISTE MAINTENANT REMPLIE ---
-                            <div key={event.id} className="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+                            <div key={event.id} className="bg-white p-4 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:shadow-md transition-shadow">
                                 <div className="flex items-center gap-4">
                                     <div className={`w-2 h-12 rounded-full ${eventStyleGetter(event).style.backgroundColor}`}></div>
                                     <div>
