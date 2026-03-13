@@ -63,6 +63,7 @@ const SideNav = () => {
     }, [refreshNotificationsBadge]);
 
     const navItems = [
+    { name: "Accueil", href: "/", icon: <LayoutDashboard/> },
     { name: "Tableau de Bord", href: "/compte", icon: <LayoutDashboard/> },
     { name: "Mes Rendez-vous", href: "/compte/rendez-vous", icon: <Calendar/> },
     { name: "Mes Formations", href: "/compte/formations", icon: <Video/> },
